@@ -2,9 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Recherche de séries</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recherche de Séries</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            padding-top: 40px;
+        }
+        .search-bar {
+            margin-bottom: 40px;
+        }
+        .search-results {
+            margin-top: 20px;
+        }
+        .search-item {
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- Navbar Brand -->
+    <a class="navbar-brand" href="#">SeriesFinder</a>
+    <!-- Navbar links -->
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="#">Accueil</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Recherche</a>
+            </li>
+            <!-- Other navigation links if needed -->
+        </ul>
+    </div>
+</nav>
 
+<div class="container">
+    <!-- Search Bar -->
+    <div class="search-bar d-flex justify-content-center">
+        <input type="text" class="form-control" placeholder="Recherchez une série">
+        <button class="btn btn-primary ml-2">Rechercher</button>
+    </div>
+    <!-- Search Results -->
+    <div class="search-results">
+        <!-- Sample Search Item -->
+        <div class="search-item">
+            <h4>Titre de la Série</h4>
+            <p>Description de la série...</p>
+        </div>
+        <!-- Repeat for each search result -->
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>

@@ -17,15 +17,6 @@ public class Serie {
 
     @Field("title")
     private String titre;
-
-    @Field("subtitles")
-    private List<String> sousTitres;
-
-    private List<String> genre;
-
-    @Field("average_ratings")
-    private double moyenneEvaluations;
-
     @Field("tfidf_vectors")
     private Map<String, Double> vecteursTFIDF;
 
@@ -33,12 +24,9 @@ public class Serie {
 
     }
 
-    public Serie(String id, String titre, ArrayList<String> genre, ArrayList<String> sousTitres, double moyenneEvaluations, TreeMap<String, Double> vecteursTFIDF) {
+    public Serie(String id, String titre,TreeMap<String, Double> vecteursTFIDF) {
         this.id = id;
         this.titre = titre;
-        this.sousTitres = sousTitres;
-        this.genre = genre;
-        this.moyenneEvaluations = moyenneEvaluations;
         this.vecteursTFIDF = vecteursTFIDF;
     }
 
@@ -58,30 +46,6 @@ public class Serie {
         this.titre = titre;
     }
 
-    public List<String> getSousTitres() {
-        return sousTitres;
-    }
-
-    public void setSousTitres (ArrayList<String> sousTitres) {
-        this.sousTitres = sousTitres;
-    }
-
-    public List<String> getGenre() {
-        return genre;
-    }
-
-    public void setGenre(ArrayList<String> genre) {
-        this.genre = genre;
-    }
-
-    public double getMoyenneEvaluations() {
-        return moyenneEvaluations;
-    }
-
-    public void setMoyenneEvaluations(double moyenneEvaluations) {
-        this.moyenneEvaluations = moyenneEvaluations;
-    }
-
     public Map<String, Double> getVecteursTFIDF() {
         return vecteursTFIDF;
     }
@@ -95,9 +59,6 @@ public class Serie {
         return "Serie{" +
                 "id='" + id + '\'' +
                 ", titre='" + titre + '\'' +
-                ", sousTitres='" + sousTitres + '\'' +
-                ", genre='" + genre + '\'' +
-                ", moyenneEvaluations='" + moyenneEvaluations + '\'' +
                 ", vecteursTFIDF='" + vecteursTFIDF + '\'' +
                 '}';
     }
