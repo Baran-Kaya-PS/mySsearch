@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            padding-top: 40px;
+        }
+        .series-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .series-item {
+            text-align: center;
+        }
+        .series-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .main-content {
+            min-height: 100%;
+            /* Égale à la hauteur du pied de page */
+            padding-bottom: 50px;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 100px; /* Hauteur de votre pied de page */
+        }
+        .navbar {
+            padding-top: 20px; /* Augmente l'espace au-dessus des liens */
+            padding-bottom: 20px; /* Augmente l'espace en dessous des liens */
+        }
+    </style>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand bg-light" href="#">SeriesFinder</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Accueil</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Recherche</a>
+            </li>
+            <!-- Autres liens de navigation si nécessaire -->
+        </ul>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="search-bar d-flex flex-column align-items-center">
+        <input type="text" class="form-control" placeholder="Recherchez une série">
+        <button class="btn btn-outline-primary mt-2">Rechercher</button>
+    </div>
+
+    <h2 class="text-center mt-5">Séries Recommandées Pour Vous</h2>
+
+    <!-- Début de la grille des séries -->
+    <div class="row text-center mt-4">
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <a href="#lien_vers_la_serie1">
+                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
+                <p class="mt-2">Nom de la série</p>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <a href="#lien_vers_la_serie2">
+                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
+                <p class="mt-2">Nom de la série</p>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <a href="#lien_vers_la_serie3">
+                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
+                <p class="mt-2">Nom de la série</p>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <a href="#lien_vers_la_serie4">
+                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
+                <p class="mt-2">Nom de la série</p>
+            </a>
+        </div>
+    </div>
+    <!-- Fin de la grille des séries -->
+</div>
+
+<footer class="footer mt-5 py-3 bg-secondary">
+    <div class="container">
+        <span class="text-muted"></span>
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
