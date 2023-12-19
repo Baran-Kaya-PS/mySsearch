@@ -50,7 +50,7 @@ public class Serie {
         return vecteursTFIDF;
     }
 
-    public void setVecteursTFIDF(TreeMap<String, Double> vecteursTFIDF) {
+    public void setVecteursTFIDF(Map<String, Double> vecteursTFIDF) {
         this.vecteursTFIDF = vecteursTFIDF;
     }
 

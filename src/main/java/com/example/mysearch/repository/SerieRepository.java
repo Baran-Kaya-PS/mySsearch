@@ -5,4 +5,5 @@ import java.util.List;
 public interface SerieRepository extends MongoRepository<Serie, String>{
     List<Serie> findByTitre(String titre);
     List<Serie> findByGenre(String genre);
+    Iterable<Serie> searchSeriesByKeyword(String keyword);
 }

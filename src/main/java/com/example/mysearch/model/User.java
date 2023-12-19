@@ -28,9 +28,8 @@ public class User {
     @Field("historique_recherches")
     private List<String> historiqueRecherches;
 
-    private List<Evaluation> evaluations; // You need to create an Evaluation class.
+    private List<Evaluation> evaluations;
 
-    private List<String> preferences; // Assuming this is a list of preferred genres.
 
     public User() {}
 
@@ -78,14 +77,6 @@ public class User {
         this.evaluations = evaluations;
     }
 
-    public List<String> getPreferences() {
-        return preferences;
-    }
-
-    public void setPreferences(List<String> preferences) {
-        this.preferences = preferences;
-    }
-
     public void addEvaluation(Evaluation evaluation) {
         if (this.evaluations == null) {
             this.evaluations = new ArrayList<>();
@@ -93,12 +84,11 @@ public class User {
         this.evaluations.add(evaluation);
     }
 
-    public User(String nom, String email, String motDePasse, List<String> historiqueRecherches, List<Evaluation> evaluations, List<String> preferences) {
+    public User(String nom, String email, String motDePasse, List<String> historiqueRecherches, List<Evaluation> evaluations) {
         this.nom = nom;
         this.email = email;
         this.motDePasse = motDePasse;
         this.historiqueRecherches = historiqueRecherches;
         this.evaluations = evaluations;
-        this.preferences = preferences;
     }
 }
