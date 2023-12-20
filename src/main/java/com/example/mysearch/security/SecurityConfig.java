@@ -8,20 +8,31 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
+import static org.springframework.http.HttpMethod.POST;
 @Configuration
 @EnableWebSecurity
+@EnableWebMvc
 public class SecurityConfig {
+            @Bean
+            SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/inscription", "/connexion").permitAll() // Accès public à l'inscription et à la connexion
+                .requestMatchers("/accueil", "/recherche", "/compte").hasRole("USER") // Accès utilisateur à l'accueil, recherche, et compte
+                .requestMatchers("/admin/**").hasRole("ADMIN") // Accès administrateur aux routes admin
+                .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
+            )
+            .httpBasic(Customizer.withDefaults()); // Exemple d'utilisation de l'authentification HTTP de base
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // sécuriser les urls de l'API (des pages web statiques peuvent être accessibles sans authentification)
-        // les pages suivantes : (Accueil, Recherche, Historique, Evaluation, Séries, Profil, Inscription, Connexion)
-        //
+        return http.build();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-}
+            @Bean
+            public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+            }
+        }
