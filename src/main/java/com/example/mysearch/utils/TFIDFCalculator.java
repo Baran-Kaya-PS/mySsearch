@@ -80,7 +80,7 @@ public class TFIDFCalculator {
             long startTime = System.nanoTime();
 
             String file = "C:\\Users\\Baran\\IdeaProjects\\mySearch\\src\\main\\java\\com\\example\\mysearch\\utils\\tf_idf_matrix.json";
-            List<String> searchTerms = Arrays.asList("meth");
+            List<String> searchTerms = Arrays.asList("prison","évader","détenu");
 
             // Appliquer la fonction pour enlever les accents
             searchTerms = removeAccents(searchTerms);
