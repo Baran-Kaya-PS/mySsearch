@@ -1,5 +1,7 @@
 package com.example.mysearch.utils;
 
+import com.example.mysearch.model.Serie;
+import com.example.mysearch.repository.SerieRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
@@ -9,12 +11,16 @@ import java.util.stream.Collectors;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+@Component
 public class TFIDFCalculator {
     private final Map<String, Double> idfCache;
+    private SerieRepository serieRepository;
 
     public TFIDFCalculator() {
         idfCache = new HashMap<>();
+        this.serieRepository = serieRepository;
     }
     // Call this method when your corpus changes to update the IDF values
     public void updateIdfCache(List<List<String>> docs) {
@@ -44,42 +50,31 @@ public class TFIDFCalculator {
         return mapper.readValue(new File(jsonFilePath), new TypeReference<List<Map<String, Object>>>() {});
     }
 
-    public List<Map<String, Object>> findTopSeries(List<String> terms, int n, String jsonFilePath) throws Exception {
-        // Lire les données TF-IDF depuis le fichier JSON
-        List<Map<String, Object>> seriesList = readJsonFile(jsonFilePath);
-
-        // Calculer la similarité pour chaque série en fonction de tous les termes
+    public List<Map<String, Object>> findTopSeries(List<String> terms, int n) {
+        List<Serie> seriesList = serieRepository.findAll();
         List<Map<String, Object>> seriesSimilarities = new ArrayList<>();
-        for (Map<String, Object> seriesEntry : seriesList) {
-            String seriesName = (String) seriesEntry.get("title");
-            Map<String, Double> tfidfValues = (Map<String, Double>) seriesEntry.get("tfidf_vectors");
 
-            // Calculer le score TF-IDF cumulatif pour tous les termes donnés dans cette série
+        for (Serie serie : seriesList) {
             double cumulativeTfidfScore = terms.stream()
-                    .mapToDouble(term -> tfidfValues.getOrDefault(term.toLowerCase(), 0.0))
+                    .mapToDouble(term -> serie.getVecteursTFIDF().getOrDefault(term.toLowerCase(), 0.0))
                     .sum();
 
-            // Si le score cumulatif est supérieur à 0, créer une nouvelle entrée de série avec la similarité
             if (cumulativeTfidfScore > 0) {
-                Map<String, Object> seriesWithSimilarity = new HashMap<>(seriesEntry);
+                Map<String, Object> seriesWithSimilarity = new HashMap<>();
+                seriesWithSimilarity.put("title", serie.getTitre());
                 seriesWithSimilarity.put("similarity", cumulativeTfidfScore);
                 seriesSimilarities.add(seriesWithSimilarity);
             }
         }
 
-        // Trier les séries en fonction de la similarité cumulée et prendre le top n
         return seriesSimilarities.stream()
-                .sorted(Comparator.comparing(series -> (Double) series.get("similarity"), Comparator.reverseOrder()))
+                .sorted(Comparator.comparingDouble((Map<String, Object> series) -> (Double) series.get("similarity")).reversed())
                 .limit(n)
                 .collect(Collectors.toList());
     }
-
     public static void main(String[] args) {
         TFIDFCalculator calculator = new TFIDFCalculator();
         try {
-            long startTime = System.nanoTime();
-
-            String file = "C:\\Users\\Baran\\IdeaProjects\\mySearch\\src\\main\\java\\com\\example\\mysearch\\utils\\tf_idf_matrix.json";
             List<String> searchTerms = Arrays.asList("prison","évader","détenu");
 
             // Appliquer la fonction pour enlever les accents
@@ -87,25 +82,19 @@ public class TFIDFCalculator {
 
             int topN = 10;
 
-            List<Map<String, Object>> topSeries = calculator.findTopSeries(searchTerms, topN, file);
+            List<Map<String, Object>> topSeries = calculator.findTopSeries(searchTerms, topN);
 
-            // Enregistrer le temps de fin
-            long endTime = System.nanoTime();
 
-            // Calculer la durée
-            long duration = (endTime - startTime) / 1_000_000; // Convertir en millisecondes
 
             // Affichage des résultats
             topSeries.forEach(entry -> System.out.println("Série : " + entry.get("title") + ", Score TF-IDF : " + entry.get("similarity")));
 
-            // Afficher le temps d'exécution
-            System.out.println("Temps d'exécution de la recherche : " + duration + " ms");
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    private static List<String> removeAccents(List<String> searchTerms) {
+    public static List<String> removeAccents(List<String> searchTerms) {
         return searchTerms.stream()
                 .map(term -> Normalizer.normalize(term, Normalizer.Form.NFD))
                 .map(term -> term.replaceAll("[\\p{InCombiningDiacriticalMarks}]", ""))

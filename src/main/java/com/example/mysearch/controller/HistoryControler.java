@@ -29,8 +29,7 @@ public class HistoryControler {
     // Add a method to get a specific history record by ID
     @GetMapping("/{id}")
     public History getHistoryRecordById(@PathVariable Long id) {
-        //return historyService.getHistoryRecordById(id);
-        return null;
+        return historyService.getHistoryRecordById(id);
     }
     
     // Add a method to create a new history record

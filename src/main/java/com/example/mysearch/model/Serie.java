@@ -3,7 +3,6 @@ package com.example.mysearch.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import javax.validation.constraints.NotBlank;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,7 +11,6 @@ public class Serie {
     @Id
     private String id;
 
-    @NotBlank(message = "Le titre est obligatoire.")
     @Field("title")
     private String titre;
 
@@ -66,5 +64,9 @@ public class Serie {
                 ", titre='" + titre + '\'' +
                 ", vecteursTFIDF=" + vecteursTFIDF +
                 '}';
+    }
+
+    public Map<String, Double> getTfidfVectors() {
+        return this.vecteursTFIDF;
     }
 }

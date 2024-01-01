@@ -46,7 +46,7 @@ public class SerieControler {
             try {
                 // Appel de TFIDFCalculator pour obtenir les meilleures séries
                 List<Map<String, Object>> bestSeries = tfidfCalculator.findTopSeries(
-                        List.of(keyword), 8, "chemin/vers/tf_idf_matrix.json");
+                        List.of(keyword), 8);
                 model.addAttribute("series", bestSeries);
             } catch (Exception e) {
                 model.addAttribute("error", "Erreur lors de la recherche : " + e.getMessage());
