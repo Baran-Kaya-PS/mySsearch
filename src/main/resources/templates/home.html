@@ -55,7 +55,6 @@
             <li class="nav-item">
                 <a class="nav-link" href="#">Recherche</a>
             </li>
-            <!-- Autres liens de navigation si nécessaire -->
         </ul>
     </div>
 </nav>
@@ -68,59 +67,15 @@
 
     <h2 class="text-center mt-5">Séries Recommandées Pour Vous</h2>
 
-    <!-- Début de la grille des séries -->
     <div class="row text-center mt-4">
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <a href="#lien_vers_la_serie1">
-                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
-                <p class="mt-2">Nom de la série</p>
-            </a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <a href="#lien_vers_la_serie2">
-                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
-                <p class="mt-2">Nom de la série</p>
-            </a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <a href="#lien_vers_la_serie3">
-                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
-                <p class="mt-2">Nom de la série</p>
-            </a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <a href="#lien_vers_la_serie4">
-                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
-                <p class="mt-2">Nom de la série</p>
-            </a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <a href="#lien_vers_la_serie1">
-                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
-                <p class="mt-2">Nom de la série</p>
-            </a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <a href="#lien_vers_la_serie2">
-                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
-                <p class="mt-2">Nom de la série</p>
-            </a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <a href="#lien_vers_la_serie3">
-                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
-                <p class="mt-2">Nom de la série</p>
-            </a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <a href="#lien_vers_la_serie4">
-                <img src="image/template.png" alt="Nom de la série" class="img-fluid">
-                <p class="mt-2">Nom de la série</p>
-            </a>
-        </div>
-
+        <div class="row text-center mt-4">
+            <div th:each="serie : ${series}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <a th:href="@{/serie/{id}(id=${serie.id})}">
+                    <img src="./image/template.png" alt="Image de la série" class="img-fluid">
+                    <p class="mt-2" th:text="${serie.titre}">Nom de la série</p>
+                </a>
+            </div>
     </div>
-    <!-- Fin de la grille des séries -->
 </div>
 
 <footer class="footer mt-5 py-3 bg-secondary">

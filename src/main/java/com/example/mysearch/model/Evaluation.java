@@ -1,11 +1,16 @@
 package com.example.mysearch.model;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 public class Evaluation {
     private String id;
     private String utilisateurId;
+    @Setter
+    @Getter
     private String serieId;
+    @Setter
     private boolean like;
 
     public Evaluation(){}
@@ -13,21 +18,11 @@ public class Evaluation {
         this.serieId = serieId;
         this.like = like;
     }
-    public String getSerieId() {
-        return serieId;
-    }
-
-    public void setSerieId(String serieId) {
-        this.serieId = serieId;
-    }
 
     public boolean getLike() {
         return like;
     }
 
-    public void setLike(boolean like) {
-        this.like = like;
-    }
     public String toString(){
         return "Evaluation{" +
                 "id='" + id + '\'' +
