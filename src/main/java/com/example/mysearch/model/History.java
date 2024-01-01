@@ -7,16 +7,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-// _id : ObjectId
-//		utilisateurId : ObjectId
-//		date : Date
-//		recherche : String
-//		resultats : [ObjectId (référence à Série)]
 @Document(collection = "historique")
 public class History {
     @Id
     private String id;
-    @Id
     private String utilisateurId;
     @DateTimeFormat(pattern = "yyyy-MM-dd-HH-mm")
     private List<String> date;
@@ -24,6 +18,9 @@ public class History {
     private List<String> resultats;
 
     public History() {
+        this.date = new ArrayList<>();
+        this.recherche = new ArrayList<>();
+        this.resultats = new ArrayList<>();
     }
 
     public History(String id, String utilisateurId, List<String> date, List<String> recherche, List<String> resultats) {
@@ -54,7 +51,7 @@ public class History {
         return date;
     }
 
-    public void setDate(ArrayList<String> date) {
+    public void setDate(List<String> date) {
         this.date = date;
     }
 
@@ -62,7 +59,7 @@ public class History {
         return recherche;
     }
 
-    public void setRecherche(ArrayList<String> recherche) {
+    public void setRecherche(List<String> recherche) {
         this.recherche = recherche;
     }
 
@@ -70,7 +67,7 @@ public class History {
         return resultats;
     }
 
-    public void setResultats(ArrayList<String> resultats) {
+    public void setResultats(List<String> resultats) {
         this.resultats = resultats;
     }
 

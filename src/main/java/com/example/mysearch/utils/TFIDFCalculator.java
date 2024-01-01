@@ -2,8 +2,6 @@ package com.example.mysearch.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -11,7 +9,7 @@ import java.util.stream.Collectors;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.stream.Collectors;
-@Service
+
 public class TFIDFCalculator {
     private final Map<String, Double> idfCache;
 
@@ -79,12 +77,30 @@ public class TFIDFCalculator {
     public static void main(String[] args) {
         TFIDFCalculator calculator = new TFIDFCalculator();
         try {
-            String file = "C:\\Users\\admin\\projects\\mySsearch\\src\\main\\java\\com\\example\\mysearch\\utils\\tf_idf_matrix.json";
-            List<String> searchTerms = List.of("meth","pollo","hermanos");
+            long startTime = System.nanoTime();
+
+            String file = "C:\\Users\\Baran\\IdeaProjects\\mySearch\\src\\main\\java\\com\\example\\mysearch\\utils\\tf_idf_matrix.json";
+            List<String> searchTerms = Arrays.asList("prison","évader","détenu");
+
+            // Appliquer la fonction pour enlever les accents
             searchTerms = removeAccents(searchTerms);
+
             int topN = 10;
+
             List<Map<String, Object>> topSeries = calculator.findTopSeries(searchTerms, topN, file);
+
+            // Enregistrer le temps de fin
+            long endTime = System.nanoTime();
+
+            // Calculer la durée
+            long duration = (endTime - startTime) / 1_000_000; // Convertir en millisecondes
+
+            // Affichage des résultats
             topSeries.forEach(entry -> System.out.println("Série : " + entry.get("title") + ", Score TF-IDF : " + entry.get("similarity")));
+
+            // Afficher le temps d'exécution
+            System.out.println("Temps d'exécution de la recherche : " + duration + " ms");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
