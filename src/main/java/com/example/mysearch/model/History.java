@@ -16,6 +16,13 @@ public class History {
     private List<String> date;
     private List<String> recherche;
     private List<String> resultats;
+    private String serieId;
+    public String getSerieId() {
+        return serieId;
+    }
+    public void setSerieId(String serieId) {
+        this.serieId = serieId;
+    }
 
     public History() {
         this.date = new ArrayList<>();
