@@ -1,5 +1,6 @@
 package com.example.mysearch.utils;
 
+import com.example.mysearch.config.MySpringConfiguration;
 import com.example.mysearch.model.Serie;
 import com.example.mysearch.repository.SerieRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,13 +13,14 @@ import java.text.Normalizer;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
 @Component
 public class TFIDFCalculator {
     private final Map<String, Double> idfCache;
-    private SerieRepository serieRepository;
-
-    public TFIDFCalculator() {
+    private final SerieRepository serieRepository;
+    @Autowired
+    public TFIDFCalculator(SerieRepository serieRepository) {
         idfCache = new HashMap<>();
         this.serieRepository = serieRepository;
     }
@@ -72,32 +74,14 @@ public class TFIDFCalculator {
                 .limit(n)
                 .collect(Collectors.toList());
     }
-    public static void main(String[] args) {
-        TFIDFCalculator calculator = new TFIDFCalculator();
-        try {
-            List<String> searchTerms = Arrays.asList("prison","évader","détenu");
-
-            // Appliquer la fonction pour enlever les accents
-            searchTerms = removeAccents(searchTerms);
-
-            int topN = 10;
-
-            List<Map<String, Object>> topSeries = calculator.findTopSeries(searchTerms, topN);
-
-
-
-            // Affichage des résultats
-            topSeries.forEach(entry -> System.out.println("Série : " + entry.get("title") + ", Score TF-IDF : " + entry.get("similarity")));
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
     public static List<String> removeAccents(List<String> searchTerms) {
         return searchTerms.stream()
                 .map(term -> Normalizer.normalize(term, Normalizer.Form.NFD))
                 .map(term -> term.replaceAll("[\\p{InCombiningDiacriticalMarks}]", ""))
                 .collect(Collectors.toList());
+    }
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MySpringConfiguration.class);
+        TFIDFCalculator calculator = context.getBean(TFIDFCalculator.class);
     }
 }

@@ -44,14 +44,19 @@ public class SerieControler {
     public String recherche(@RequestParam(required = false) String keyword, Model model) {
         if (keyword != null && !keyword.isEmpty()) {
             try {
-                // Appel de TFIDFCalculator pour obtenir les meilleures séries
-                List<Map<String, Object>> bestSeries = tfidfCalculator.findTopSeries(
-                        List.of(keyword), 8);
+                // Utilisation du service pour obtenir les meilleures séries
+                List<Serie> bestSeries = (List<Serie>) serieService.searchSeriesByKeyword(keyword);
                 model.addAttribute("series", bestSeries);
             } catch (Exception e) {
                 model.addAttribute("error", "Erreur lors de la recherche : " + e.getMessage());
+                // Logger l'erreur pour le débogage
+                e.printStackTrace();
             }
+        } else {
+            // Gestion du cas où aucun mot-clé n'est fourni
+            model.addAttribute("error", "Veuillez entrer un mot-clé pour la recherche.");
         }
         return "home";
     }
+
 }
