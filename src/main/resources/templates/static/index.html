@@ -60,10 +60,12 @@
 </nav>
 
 <div class="container">
-    <div class="search-bar d-flex flex-column align-items-center">
-        <input type="text" class="form-control" placeholder="Recherchez une série">
-        <button class="btn btn-outline-primary mt-2">Rechercher</button>
-    </div>
+    <form th:action="@{/api/serie/search}" method="get" class="search-bar d-flex flex-column align-items-center">
+        <label>
+            <input type="text" th:name="keyword" class="form-control" placeholder="Recherchez une série">
+        </label>
+        <button type="submit" class="btn btn-outline-primary mt-2">Rechercher</button>
+    </form>
 
     <h2 class="text-center mt-5">Séries Recommandées Pour Vous</h2>
 
@@ -71,7 +73,7 @@
         <div class="row text-center mt-4">
             <div th:each="serie : ${series}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
                 <a th:href="@{/serie/{id}(id=${serie.id})}">
-                    <img src="./image/template.png" alt="Image de la série" class="img-fluid">
+                    <img src="../image/template.png" alt="Image de la série" class="img-fluid">
                     <p class="mt-2" th:text="${serie.titre}">Nom de la série</p>
                 </a>
             </div>
@@ -87,5 +89,6 @@
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</div>
 </body>
 </html>

@@ -25,32 +25,29 @@
 <body>
 <div class="container">
     <h2 class="text-center">Inscription</h2>
-    <form id="registrationForm">
+    <form id="registrationForm" action="/inscription" method="POST">
+        <!-- ...autres champs... -->
         <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" class="form-control" id="email" placeholder="Entrez votre email">
-            <div class="error-message">Veuillez entrer votre email.</div>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Entrez votre email">
+            <!-- ... -->
         </div>
         <div class="form-group">
             <label for="new-username">Nom d'utilisateur</label>
-            <input type="text" class="form-control" id="new-username" placeholder="Créez un nom d'utilisateur">
-            <div class="error-message">Veuillez créer un nom d'utilisateur.</div>
+            <input type="text" class="form-control" id="new-username" name="username" placeholder="Créez un nom d'utilisateur">
+            <!-- ... -->
         </div>
         <div class="form-group">
             <label for="new-password">Mot de passe</label>
-            <input type="password" class="form-control" id="new-password" placeholder="Créez un mot de passe">
-            <div class="error-message">Veuillez créer un mot de passe.</div>
+            <input type="password" class="form-control" id="new-password" name="password" placeholder="Créez un mot de passe">
+            <!-- ... -->
         </div>
-        <div class="form-group">
-            <label for="confirm-password">Confirmez le mot de passe</label>
-            <input type="password" class="form-control" id="confirm-password" placeholder="Confirmez votre mot de passe">
-            <div class="error-message">Veuillez confirmer votre mot de passe.</div>
-        </div>
+        <!-- ... -->
         <button type="submit" class="btn btn-primary btn-block btn-margin-bottom">S'inscrire</button>
-        <div class="text-center">
-            <a href="#" class="btn btn-outline-primary">Déjà inscrit ? Connectez-vous ici</a>
-        </div>
+        <!-- ... -->
     </form>
+    <div class="text-center">
+        <a href="/connexion">Déjà inscrit ? Connectez-vous</a>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>

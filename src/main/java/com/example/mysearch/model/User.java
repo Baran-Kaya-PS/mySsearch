@@ -16,14 +16,14 @@ public class User {
     private String id;
 
     @NotBlank(message = "Nom obligatoire")
-    private String nom;
+    private String name;
 
     @NotBlank(message = "Email obligatoire")
     @Email(message = "Email invalide")
     private String email;
 
     @NotBlank(message = "Mot de passe obligatoire")
-    private String motDePasse;
+    private String password;
 
     @Field("historique_recherches")
     private List<String> historiqueRecherches;
@@ -41,12 +41,12 @@ public class User {
         this.id = id;
     }
 
-    public String getNom() {
-        return nom;
+    public String getName() {
+        return name;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public void setName(String nom) {
+        this.name = nom;
     }
 
     public String getEmail() {
@@ -57,12 +57,12 @@ public class User {
         this.email = email;
     }
 
-    public String getMotDePasse() {
-        return motDePasse;
+    public String getPassword() {
+        return password;
     }
 
-    public void setMotDePasse(String motDePasse) {
-        this.motDePasse = motDePasse;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public List<String> getHistoriqueRecherches() { return historiqueRecherches; }
@@ -85,9 +85,9 @@ public class User {
     }
 
     public User(String nom, String email, String motDePasse, List<String> historiqueRecherches, List<Evaluation> evaluations) {
-        this.nom = nom;
+        this.name = nom;
         this.email = email;
-        this.motDePasse = motDePasse;
+        this.password = motDePasse;
         this.historiqueRecherches = historiqueRecherches;
         this.evaluations = evaluations;
     }

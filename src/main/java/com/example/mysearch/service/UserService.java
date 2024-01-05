@@ -19,7 +19,7 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        user.setMotDePasse(passwordEncoder.encode(user.getMotDePasse()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
     public User findById(String id) {
@@ -33,9 +33,9 @@ public class UserService {
     public User updateUser(Long id, User user) {
         User userToUpdate = userRepository.findById(String.valueOf(id)).orElse(null);
         if (userToUpdate != null) {
-            userToUpdate.setNom(user.getNom());
+            userToUpdate.setName(user.getName());
             userToUpdate.setEmail(user.getEmail());
-            userToUpdate.setMotDePasse(passwordEncoder.encode(user.getMotDePasse()));
+            userToUpdate.setPassword(passwordEncoder.encode(user.getPassword()));
             userToUpdate.setHistoriqueRecherches(user.getHistoriqueRecherches());
             return userRepository.save(userToUpdate);
         }
