@@ -28,3 +28,5 @@ def collect_code(base_path, output_file):
 
 # Run the function to collect the code
 collect_code(src_path, output_path)
+
+#%%
