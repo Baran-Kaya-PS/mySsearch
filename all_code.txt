@@ -1,0 +1,1279 @@
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\MySearchApplication.java
+
+package com.example.mysearch;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySearchApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(MySearchApplication.class, args);
+    }
+
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\config\MySpringConfiguration.java
+
+package com.example.mysearch.config;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@ComponentScan(basePackages = "com.example.mysearch")
+public class MySpringConfiguration {
+    // Vous pouvez ajouter des configurations supplémentaires ici si nécessaire
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\config\SecurityConfiguration.java
+
+package com.example.mysearch.config;
+
+import java.util.Arrays;
+
+public class SecurityConfiguration {
+
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\controller\AuthController.java
+
+package com.example.mysearch.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+public class AuthController {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @GetMapping("/connexion")
+    public String getLoginPage() {
+        return "login";
+    }
+
+    @PostMapping("/login")
+    public String handleLogin(
+            @RequestParam String username,
+            @RequestParam String password,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+            return "redirect:/index";
+        } catch (AuthenticationException e) {
+            redirectAttributes.addFlashAttribute("error", "Invalid username or password");
+            return "redirect:/connexion";
+        }
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\controller\EvaluationControler.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.model.Evaluation;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.example.mysearch.service.EvaluationService;
+@RestController
+@RequestMapping("/api/evaluation")
+
+public class EvaluationControler {
+    private final EvaluationService evaluationService;
+
+    public EvaluationControler(EvaluationService evaluationService) {
+        this.evaluationService = evaluationService;
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<Iterable<Evaluation>> getAllEvaluations() {
+        Iterable<Evaluation> evaluations = evaluationService.getAllEvaluations();
+        return ResponseEntity.ok(evaluations);
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<Evaluation> getEvaluationById(@PathVariable Long id) {
+        Evaluation evaluation = evaluationService.getEvaluationById(id);
+        return evaluation != null ? ResponseEntity.ok(evaluation): ResponseEntity.notFound().build();
+    }
+    @PostMapping("/create")
+    public ResponseEntity<Evaluation> createEvaluation(@Valid @RequestBody Evaluation evaluation) {
+        Evaluation savedEvaluation = evaluationService.createEvaluation(evaluation);
+        return new ResponseEntity<>(savedEvaluation, HttpStatus.CREATED);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<Evaluation> updateEvaluation(@PathVariable Long id, @Valid @RequestBody Evaluation evaluation) {
+        Evaluation updatedEvaluation = evaluationService.updateEvaluation(id, evaluation);
+        return new ResponseEntity<>(updatedEvaluation, HttpStatus.OK);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Evaluation> deleteEvaluation(@PathVariable Long id) {
+        evaluationService.deleteEvaluation(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\controller\HistoryControler.java
+
+package com.example.mysearch.controller;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.example.mysearch.service.HistoryService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import java.util.List;
+import com.example.mysearch.service.HistoryService;
+import com.example.mysearch.model.History;
+
+@RestController
+@RequestMapping("/api/history")
+public class HistoryControler {
+    private final HistoryService historyService;
+
+    public HistoryControler(HistoryService historyService) {
+        this.historyService = historyService;
+    }
+    @GetMapping("/")
+    public List<History> getAllHistoryRecords() {
+        return historyService.getAllHistoryRecords();
+    }
+    
+    // Add a method to get a specific history record by ID
+    @GetMapping("/{id}")
+    public History getHistoryRecordById(@PathVariable Long id) {
+        return historyService.getHistoryRecordById(id);
+    }
+    
+    // Add a method to create a new history record
+    @PostMapping("/")
+    public History createHistoryRecord(@RequestBody History historyRecord) {
+        return historyService.createHistoryRecord(historyRecord);
+    }
+    
+    // Add a method to update an existing history record
+    @PutMapping("/{id}")
+    public History updateHistoryRecord(@PathVariable Long id, @RequestBody History historyRecord) {
+        return historyService.updateHistoryRecord(id, historyRecord);
+    }
+    
+    // Add a method to delete a history record
+    @DeleteMapping("/{id}")
+    public void deleteHistoryRecord(@PathVariable Long id) {
+        historyService.deleteHistoryRecord(id);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\controller\SerieControler.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.model.Serie;
+import com.example.mysearch.service.SerieService;
+import com.example.mysearch.utils.TFIDFCalculator;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.ui.Model;
+
+import java.util.List;
+
+@Controller // Remplacer @RestController par @Controller car on retourne une vue HTML et non du JSON
+@RequestMapping("/api/serie")
+public class SerieControler {
+    private final SerieService serieService;
+    private final TFIDFCalculator tfidfCalculator;
+
+    public SerieControler(SerieService serieService, TFIDFCalculator tfidfCalculator) {
+        this.serieService = serieService;
+        this.tfidfCalculator = tfidfCalculator;
+    }
+    public ResponseEntity<Iterable<Serie>> getAllSeries() {
+        Iterable<Serie> series = serieService.getAllSeries();
+        return ResponseEntity.ok(series);
+    }
+    public ResponseEntity<Serie> getSerieById(String serieId) {
+        Serie serie = serieService.getSerieById(serieId);
+        return serie != null ? ResponseEntity.ok(serie): ResponseEntity.notFound().build();
+    }
+    public ResponseEntity<Serie> addSerie(Serie serie) {
+        Serie savedSerie = serieService.addSerie(serie);
+        return ResponseEntity.ok(savedSerie);
+    }
+    public ResponseEntity<Serie> deleteSerie(String serieId) {
+        serieService.deleteSerie(serieId);
+        return ResponseEntity.ok().build();
+    }
+    @GetMapping("/search")
+    public String search(@RequestParam(required = false) String keyword, Model model) {
+        if (keyword != null && !keyword.isEmpty()) {
+            try {
+                // Utilisation du service pour obtenir les meilleures séries
+                List<Serie> bestSeries = (List<Serie>) serieService.searchSeriesByKeyword(keyword);
+                model.addAttribute("series", bestSeries);
+            } catch (Exception e) {
+                model.addAttribute("error", "Erreur lors de la recherche : " + e.getMessage());
+                // Logger l'erreur pour le débogage
+                e.printStackTrace();
+            }
+        } else {
+            // Gestion du cas où aucun mot-clé n'est fourni
+            model.addAttribute("error", "Veuillez entrer un mot-clé pour la recherche.");
+        }
+        return "index";
+    }
+
+}
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\controller\SignupController.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.service.SignupService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+@Controller
+public class SignupController {
+    @Autowired
+    private SignupService signupService;
+
+    @GetMapping("/inscription")
+    public String inscriptionForm() {
+        return "signup"; // retourne la page d'inscription
+    }
+
+    @PostMapping("/inscription")
+    public String inscriptionSubmit(@RequestParam String username, @RequestParam String email, @RequestParam String password) {
+        signupService.enregistrer(username, email, password);
+        return "redirect:/connexion"; // redirige vers la page de connexion après l'inscription
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\controller\UserControler.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.model.User;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.example.mysearch.service.UserService;
+/*
+registerUser(User user): enregistrer un nouvel utilisateur.
+loginUser(LoginDto loginDto): gérer la connexion utilisateur.
+getUserProfile(String userId): obtenir le profil de l'utilisateur.
+updateUserProfile(String userId, User updatedUser): mettre à jour le profil utilisateur.
+deleteUser(String userId): supprimer un utilisateur.
+ */
+@RestController
+@RequestMapping("/api/user")
+public class UserControler {
+    private final UserService userService;
+
+    public UserControler(UserService userService) {
+        this.userService = userService;
+    }
+    @PostMapping("/create")
+    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
+        User savedUser = userService.createUser(user);
+        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        return user != null ? ResponseEntity.ok(user): ResponseEntity.notFound().build();
+    }
+    @GetMapping("/all")
+    public ResponseEntity<Iterable<User>> getAllUsers() {
+        Iterable<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody User user) {
+        User updatedUser = userService.updateUser(id, user);
+        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<User> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\model\Evaluation.java
+
+package com.example.mysearch.model;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+public class Evaluation {
+    private String id;
+    private String utilisateurId;
+    @Setter
+    @Getter
+    private String serieId;
+    @Setter
+    private boolean like;
+
+    public Evaluation(){}
+    public Evaluation(String id, String utilisateurId, String serieId, boolean like) {
+        this.serieId = serieId;
+        this.like = like;
+    }
+
+    public boolean getLike() {
+        return like;
+    }
+
+    public String toString(){
+        return "Evaluation{" +
+                "id='" + id + '\'' +
+                ", utilisateurId='" + utilisateurId + '\'' +
+                ", serieId='" + serieId + '\'' +
+                ", note=" + like +
+                '}';
+    }
+    public String toCSV(){
+        return id + "," + utilisateurId + "," + serieId + "," + like;
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\model\History.java
+
+package com.example.mysearch.model;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Document(collection = "historique")
+public class History {
+    @Id
+    private String id;
+    private String utilisateurId;
+    @DateTimeFormat(pattern = "yyyy-MM-dd-HH-mm")
+    private List<String> date;
+    private List<String> recherche;
+    private List<String> resultats;
+    private String serieId;
+    public String getSerieId() {
+        return serieId;
+    }
+    public void setSerieId(String serieId) {
+        this.serieId = serieId;
+    }
+
+    public History() {
+        this.date = new ArrayList<>();
+        this.recherche = new ArrayList<>();
+        this.resultats = new ArrayList<>();
+    }
+
+    public History(String id, String utilisateurId, List<String> date, List<String> recherche, List<String> resultats) {
+        this.id = id;
+        this.utilisateurId = utilisateurId;
+        this.date = date;
+        this.recherche = recherche;
+        this.resultats = resultats;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getUtilisateurId() {
+        return utilisateurId;
+    }
+
+    public void setUtilisateurId(String utilisateurId) {
+        this.utilisateurId = utilisateurId;
+    }
+
+    public List<String> getDate() {
+        return date;
+    }
+
+    public void setDate(List<String> date) {
+        this.date = date;
+    }
+
+    public List<String> getRecherche() {
+        return recherche;
+    }
+
+    public void setRecherche(List<String> recherche) {
+        this.recherche = recherche;
+    }
+
+    public List<String> getResultats() {
+        return resultats;
+    }
+
+    public void setResultats(List<String> resultats) {
+        this.resultats = resultats;
+    }
+
+    @Override
+    public String toString() {
+        return "History{" +
+                "id='" + id + '\'' +
+                ", utilisateurId='" + utilisateurId + '\'' +
+                ", date=" + date +
+                ", recherche=" + recherche +
+                ", resultats=" + resultats +
+                '}';
+    }
+
+    public String toCSV() {
+        return id + ';' + utilisateurId + ';' + date + ';' + recherche + ';' + resultats;
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\model\Serie.java
+
+package com.example.mysearch.model;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import java.util.HashMap;
+import java.util.Map;
+
+@Document(collection = "series")
+public class Serie {
+    @Id
+    private String id;
+
+    @Field("title")
+    private String titre;
+
+    @Field("tfidf_vectors")
+    private Map<String, Double> vecteursTFIDF = new HashMap<>();
+
+    // Constructeurs, getters et setters
+
+    public Serie() {
+        // Constructeur par défaut nécessaire pour Spring Data
+    }
+
+    public Serie(String id, String titre, Map<String, Double> vecteursTFIDF) {
+        this.id = id;
+        this.titre = titre;
+        this.vecteursTFIDF = vecteursTFIDF;
+    }
+
+    // Getters et Setters
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getTitre() {
+        return titre;
+    }
+
+    public void setTitre(String titre) {
+        this.titre = titre;
+    }
+
+    public Map<String, Double> getVecteursTFIDF() {
+        return vecteursTFIDF;
+    }
+
+    public void setVecteursTFIDF(Map<String, Double> vecteursTFIDF) {
+        this.vecteursTFIDF = vecteursTFIDF;
+    }
+
+    // Méthode toString pour un affichage facile des informations de la série
+
+    @Override
+    public String toString() {
+        return "Serie{" +
+                "id='" + id + '\'' +
+                ", titre='" + titre + '\'' +
+                ", vecteursTFIDF=" + vecteursTFIDF +
+                '}';
+    }
+
+    public Map<String, Double> getTfidfVectors() {
+        return this.vecteursTFIDF;
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\model\User.java
+
+package com.example.mysearch.model;
+
+// importation
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document; // importation de Document -> signifie que la classe est un document MongoDB
+import org.springframework.data.mongodb.core.mapping.Field; // importation de Field -> signifie que le champ est un champ MongoDB
+import jakarta.validation.constraints.NotBlank; // Fonction NotBlank -> signifie que le champ ne doit pas être vide
+import jakarta.validation.constraints.Email; // Fonction Email -> signifie que le champ doit être un email
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Document(collection = "users")
+public class User {
+    @Id
+    private String id;
+
+    @NotBlank(message = "Nom obligatoire")
+    private String name;
+
+    @NotBlank(message = "Email obligatoire")
+    @Email(message = "Email invalide")
+    private String email;
+
+    @NotBlank(message = "Mot de passe obligatoire")
+    private String password;
+
+    @Field("historique_recherches")
+    private List<String> historiqueRecherches;
+
+    private List<Evaluation> evaluations;
+
+
+    public User() {}
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String nom) {
+        this.name = nom;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public List<String> getHistoriqueRecherches() { return historiqueRecherches; }
+
+    public void setHistoriqueRecherches(List<String> historiqueRecherches) {this.historiqueRecherches = historiqueRecherches;}
+
+    public List<Evaluation> getEvaluations() {
+        return evaluations;
+    }
+
+    public void setEvaluations(List<Evaluation> evaluations) {
+        this.evaluations = evaluations;
+    }
+
+    public void addEvaluation(Evaluation evaluation) {
+        if (this.evaluations == null) {
+            this.evaluations = new ArrayList<>();
+        }
+        this.evaluations.add(evaluation);
+    }
+
+    public User(String nom, String email, String motDePasse, List<String> historiqueRecherches, List<Evaluation> evaluations) {
+        this.name = nom;
+        this.email = email;
+        this.password = motDePasse;
+        this.historiqueRecherches = historiqueRecherches;
+        this.evaluations = evaluations;
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\repository\EvaluationRepository.java
+
+package com.example.mysearch.repository;
+import com.example.mysearch.model.Evaluation;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+public interface EvaluationRepository extends MongoRepository<Evaluation, String>{
+    List<Evaluation> findByUtilisateurId(String utilisateurId);
+    List<Evaluation> findBySerieId(String serieId);
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\repository\HistoryRepository.java
+
+package com.example.mysearch.repository;
+import com.example.mysearch.model.History;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+public interface HistoryRepository extends MongoRepository<History, String>{
+    List<History> findByUtilisateurId(String utilisateurId);
+    List<History> findBySerieId(String serieId);
+    List<History> findByRecherche(String recherche);
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\repository\SerieRepository.java
+
+package com.example.mysearch.repository;
+import com.example.mysearch.model.Serie;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+public interface SerieRepository extends MongoRepository<Serie, String>{
+    List<Serie> findByTitre(String titre);
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\repository\UserRepository.java
+
+package com.example.mysearch.repository;
+
+import com.example.mysearch.model.User;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface UserRepository extends MongoRepository<User, String>{
+    List<User> findByEmail(String email);
+    List<User> findByName(String nom);
+    
+    Optional<User> findById (String id);
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\runners\TFIDFRunner.java
+
+package com.example.mysearch.runners;
+
+import com.example.mysearch.utils.TFIDFCalculator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static java.util.Arrays.*;
+
+@Component
+public class TFIDFRunner implements CommandLineRunner {
+
+    private final TFIDFCalculator calculator;
+
+    @Autowired
+    public TFIDFRunner(TFIDFCalculator calculator) {
+        this.calculator = calculator;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        List<String> searchTerms = asList("prison", "évader", "détenu");
+        searchTerms = TFIDFCalculator.removeAccents(searchTerms);
+        int topN = 10;
+        List<Map<String, Object>> topSeries = calculator.findTopSeries(searchTerms, topN);
+        // Affichage des résultats
+        topSeries.forEach(entry -> System.out.println("Série : " + entry.get("title") + ", Score TF-IDF : " + entry.get("similarity")));
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\security\CsrfSecurityConfig.java
+
+package com.example.mysearch.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
+@Configuration
+@EnableWebSecurity
+public class CsrfSecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> {
+                    csrf.csrfTokenRepository(customCsrfTokenRepository()); // Utiliser un repository personnalisé
+                    // Autres personnalisations CSRF...
+                });
+        // Autres configurations de sécurité...
+        return http.build();
+    }
+
+    private CsrfTokenRepository customCsrfTokenRepository() {
+        // Implémentez votre propre CsrfTokenRepository
+        return new HttpSessionCsrfTokenRepository(); // Exemple avec HttpSessionCsrfTokenRepository
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\security\SecurityConfig.java
+
+package com.example.mysearch.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
+import static org.springframework.http.HttpMethod.POST;
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/inscription", "/connexion","/accueil","/recherche","/compte").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/connexion")
+                        .permitAll()
+                        .defaultSuccessUrl("/accueil", true)
+                )
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/connexion?logout")
+                        .permitAll()
+                );
+        return http.build();
+    }
+    // Define your PasswordEncoder bean
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\service\EvaluationService.java
+
+package com.example.mysearch.service;
+import com.example.mysearch.model.Evaluation;
+import com.example.mysearch.repository.EvaluationRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+@Service
+public class EvaluationService {
+    private final EvaluationRepository evaluationRepository;
+
+    public EvaluationService(EvaluationRepository evaluationRepository) {
+        this.evaluationRepository = evaluationRepository;
+    }
+
+    public Iterable<Evaluation> getAllEvaluations() {
+        return evaluationRepository.findAll();
+    }
+
+    public Evaluation getEvaluationById(Long id) {
+        return evaluationRepository.findById(String.valueOf(id)).orElse(null);
+    }
+
+    public Evaluation createEvaluation(Evaluation evaluation) {
+        return evaluationRepository.save(evaluation);
+    }
+
+    public Evaluation updateEvaluation(Long id, Evaluation evaluation) {
+        return evaluationRepository.save(evaluation);
+    }
+
+    public void deleteEvaluation(Long id) {
+        evaluationRepository.deleteById(String.valueOf(id));
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\service\HistoryService.java
+
+package com.example.mysearch.service;
+
+import com.example.mysearch.model.History;
+import com.example.mysearch.repository.HistoryRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+
+@Service
+public class HistoryService {
+    private final HistoryRepository historyRepository;
+
+    public HistoryService(HistoryRepository historyRepository) {
+        this.historyRepository = historyRepository;
+    }
+
+    public List<History> getAllHistoryRecords() {
+        return historyRepository.findAll();
+    }
+
+    public History getHistoryRecordById(Long id) {
+        return historyRepository.findById(String.valueOf(id)).orElse(null);
+    }
+
+    public History createHistoryRecord(History history) {
+        return historyRepository.save(history);
+    }
+
+    public History updateHistoryRecord(Long id, History updatedHistory) {
+        History existingHistory = historyRepository.findById(String.valueOf(id)).orElse(null);
+        if (existingHistory != null) {
+            existingHistory.setDate(updatedHistory.getDate());
+            existingHistory.setRecherche(updatedHistory.getRecherche());
+            existingHistory.setResultats(updatedHistory.getResultats());
+            return historyRepository.save(existingHistory);
+
+        }
+        return null;
+    }
+
+    public boolean deleteHistoryRecord(Long id) {
+        History existingHistory = historyRepository.findById(String.valueOf(id)).orElse(null);
+        if (existingHistory != null) {
+            historyRepository.delete(existingHistory);
+            return true;
+        }
+        return false;
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\service\SearchService.java
+
+package com.example.mysearch.service;
+
+import com.example.mysearch.model.Serie;
+import com.example.mysearch.repository.SerieRepository;
+import com.example.mysearch.utils.TFIDFCalculator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class SearchService {
+    private final SerieRepository serieRepository;
+    private final TFIDFCalculator tfidfCalculator;
+
+    @Autowired
+    public SearchService(SerieRepository serieRepository, TFIDFCalculator tfidfCalculator) {
+        this.serieRepository = serieRepository;
+        this.tfidfCalculator = tfidfCalculator;
+    }
+
+    public List<Serie> searchSeriesByKeyword(String keyword) {
+        // Ici, nous recherchons toutes les séries et effectuons le filtrage en mémoire
+        // Cela pourrait être optimisé en utilisant une recherche de texte MongoDB si les performances sont un problème
+        List<Serie> allSeries = serieRepository.findAll();
+        return allSeries.stream()
+                .filter(serie -> {
+                    Map<String, Double> tfidfVectors = serie.getTfidfVectors();
+                    return tfidfVectors != null && tfidfVectors.containsKey(keyword) && tfidfVectors.get(keyword) > 0;
+                })
+                .sorted((serie1, serie2) -> {
+                    double score1 = serie1.getTfidfVectors().get(keyword);
+                    double score2 = serie2.getTfidfVectors().get(keyword);
+                    return Double.compare(score2, score1);
+                })
+                .collect(Collectors.toList());
+    }
+
+    // ... d'autres méthodes si nécessaire
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\service\SerieService.java
+
+package com.example.mysearch.service;
+import com.example.mysearch.controller.SerieControler;
+import com.example.mysearch.model.Serie;
+import com.example.mysearch.repository.SerieRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
+
+@Service
+public class SerieService {
+    private final SerieRepository serieRepository;
+
+    public SerieService(SerieRepository serieRepository) {
+        this.serieRepository = serieRepository;
+    }
+
+    public Iterable<Serie> getAllSeries() {
+        return serieRepository.findAll();
+    }
+
+    public Serie getSerieById(String serieId) {
+        return serieRepository.findById(serieId).orElse(null);
+    }
+
+    public Serie addSerie(Serie serie) {
+        return serieRepository.findById(serie.getId()).orElse(null);
+    }
+
+    public void deleteSerie(String serieId) {
+        serieRepository.deleteById(serieId);
+    }
+    public Iterable<Serie> searchSeriesByKeyword(String keyword) {
+        return serieRepository.findAll().stream()
+                .filter(serie -> serie.getVecteursTFIDF().containsKey(keyword))
+                .sorted((s1,s2) -> s2.getVecteursTFIDF().get(keyword).compareTo(s1.getVecteursTFIDF().get(keyword)))
+                .collect(Collectors.toList());
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\service\SignupService.java
+
+package com.example.mysearch.service;
+
+import com.example.mysearch.model.User;
+import com.example.mysearch.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+public class SignupService {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public void enregistrer(String username, String email, String password) {
+        User newUser = new User();
+        newUser.setName(username);
+        newUser.setEmail(email);
+        newUser.setPassword(passwordEncoder.encode(password));
+        userRepository.save(newUser);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\service\UserService.java
+
+package com.example.mysearch.service;
+import com.example.mysearch.model.User;
+import com.example.mysearch.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+@Service
+public class UserService {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findById(String.valueOf(id)).orElse(null);
+    }
+
+    public User createUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+    }
+    public User findById(String id) {
+        return userRepository.findById(id).orElse(null);
+    }
+
+    public void deleteUser(Long id) {
+        userRepository.deleteById(String.valueOf(id));
+    }
+
+    public User updateUser(Long id, User user) {
+        User userToUpdate = userRepository.findById(String.valueOf(id)).orElse(null);
+        if (userToUpdate != null) {
+            userToUpdate.setName(user.getName());
+            userToUpdate.setEmail(user.getEmail());
+            userToUpdate.setPassword(passwordEncoder.encode(user.getPassword()));
+            userToUpdate.setHistoriqueRecherches(user.getHistoriqueRecherches());
+            return userRepository.save(userToUpdate);
+        }
+        return null;
+    }
+
+    public Iterable<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\utils\TFIDFCalculator.java
+
+package com.example.mysearch.utils;
+
+import com.example.mysearch.config.MySpringConfiguration;
+import com.example.mysearch.model.Serie;
+import com.example.mysearch.repository.SerieRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.text.Normalizer;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.stereotype.Component;
+@Component
+public class TFIDFCalculator {
+    private final Map<String, Double> idfCache;
+    private final SerieRepository serieRepository;
+    @Autowired
+    public TFIDFCalculator(SerieRepository serieRepository) {
+        idfCache = new HashMap<>();
+        this.serieRepository = serieRepository;
+    }
+    // Call this method when your corpus changes to update the IDF values
+    public void updateIdfCache(List<List<String>> docs) {
+        Set<String> uniqueTerms = new HashSet<>();
+        docs.forEach(uniqueTerms::addAll);
+        uniqueTerms.forEach(term -> idfCache.put(term, idf(docs, term)));
+    }
+
+    private double tf(List<String> doc, String term) {
+        long count = doc.stream().filter(term::equalsIgnoreCase).count();
+        return (double) count / doc.size();
+    }
+
+    private double idf(List<List<String>> docs, String term) {
+        long count = docs.stream().filter(doc -> doc.contains(term.toLowerCase())).count();
+        if (count == 0) return 0;
+        return Math.log((double) docs.size() / count);
+    }
+
+    public double tfIdf(List<String> doc, String term) {
+        // Use cached IDF value if available
+        double termIdf = idfCache.containsKey(term) ? idfCache.get(term) : idf(Collections.singletonList(doc), term);
+        return tf(doc, term) * termIdf;
+    }
+    public List<Map<String, Object>> readJsonFile(String jsonFilePath) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(new File(jsonFilePath), new TypeReference<List<Map<String, Object>>>() {});
+    }
+
+    public List<Map<String, Object>> findTopSeries(List<String> terms, int n) {
+        List<Serie> seriesList = serieRepository.findAll();
+        List<Map<String, Object>> seriesSimilarities = new ArrayList<>();
+
+        for (Serie serie : seriesList) {
+            double cumulativeTfidfScore = terms.stream()
+                    .mapToDouble(term -> serie.getVecteursTFIDF().getOrDefault(term.toLowerCase(), 0.0))
+                    .sum();
+
+            if (cumulativeTfidfScore > 0) {
+                Map<String, Object> seriesWithSimilarity = new HashMap<>();
+                seriesWithSimilarity.put("title", serie.getTitre());
+                seriesWithSimilarity.put("similarity", cumulativeTfidfScore);
+                seriesSimilarities.add(seriesWithSimilarity);
+            }
+        }
+
+        return seriesSimilarities.stream()
+                .sorted(Comparator.comparingDouble((Map<String, Object> series) -> (Double) series.get("similarity")).reversed())
+                .limit(n)
+                .collect(Collectors.toList());
+    }
+    public static List<String> removeAccents(List<String> searchTerms) {
+        return searchTerms.stream()
+                .map(term -> Normalizer.normalize(term, Normalizer.Form.NFD))
+                .map(term -> term.replaceAll("[\\p{InCombiningDiacriticalMarks}]", ""))
+                .collect(Collectors.toList());
+    }
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MySpringConfiguration.class);
+        TFIDFCalculator calculator = context.getBean(TFIDFCalculator.class);
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\test\java\com\example\mysearch\MySearchApplicationTests.java
+
+package com.example.mysearch;
+
+import com.example.mysearch.model.Serie;
+import com.example.mysearch.repository.SerieRepository;
+import com.example.mysearch.utils.TFIDFCalculator;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+public class MySearchApplicationTests {
+
+    @Autowired // injecte le bean dans le test
+    private SerieRepository serieRepository;
+    @Autowired
+    private TFIDFCalculator tfidfCalculator;
+
+    @Test
+    public void shouldFetchData() {
+        String expectedTitle = "breakingbad";
+
+
+        List<Serie> series = serieRepository.findByTitre(expectedTitle);
+
+
+        assertThat(series).isNotEmpty();
+        assertThat(series.get(0).getTitre()).isEqualTo(expectedTitle);
+    }
+    @Test
+    public void tfidfScoreForBreakingBadShouldBeHighestForMeth() {
+        // Given
+        String keyword = "meth";
+        String expectedTopTitle = "breakingbad";
+
+        // When
+        List<Map<String, Object>> topSeries = tfidfCalculator.findTopSeries(Collections.singletonList(keyword), 10);
+
+        // Then
+        assertThat(topSeries).isNotEmpty();
+        assertThat(topSeries.get(0)).containsEntry("title", expectedTopTitle);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
