@@ -1,31 +1,15 @@
 package com.example.mysearch;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.security.web.server.csrf.CsrfToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.*;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -72,13 +56,18 @@ public class SecurityConfigTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String csrfToken = mvcResult.getResponse().getHeader("X-CSRF-TOKEN");
+        // Extract the CsrfToken object from the request attribute
+        CsrfToken csrfToken = (CsrfToken) mvcResult.getRequest().getAttribute(CsrfToken.class.getName());
 
-        mockMvc.perform(post("/login").with(SecurityMockMvcRequestPostProcessors.csrf().csrfToken(csrfToken))
+        // Now we can use the token value in the subsequent POST request
+        mockMvc.perform(post("/login")
                         .param("username", "user")
-                        .param("password", "password"))
+                        .param("password", "password")
+                        .param(csrfToken.getParameterName(), csrfToken.getToken()))
                 .andExpect(status().is3xxRedirection());
     }
+
+
 
     @Test
     public void loginWithInvalidCsrfTokenShouldFail() throws Exception {
@@ -87,4 +76,15 @@ public class SecurityConfigTest {
                         .param("password", "password"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    public void loginWithValidUserShouldSucceed() throws Exception {
+        mockMvc.perform(post("/login")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()) // This will add the CSRF token
+                        .param("username", "user")
+                        .param("password", "password"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/accueil")); // assuming you redirect to "/accueil" on success
+    }
+
 }

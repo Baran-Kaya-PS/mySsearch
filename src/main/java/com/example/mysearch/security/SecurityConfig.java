@@ -25,7 +25,7 @@ public class SecurityConfig {
                     csrf.csrfTokenRepository(customCsrfTokenRepository());
                 })
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/inscription", "/login", "/accueil", "/recherche", "/compte").permitAll()
+                        .requestMatchers("/inscription", "/login", "/accueil", "/recherche", "/compte","/").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
