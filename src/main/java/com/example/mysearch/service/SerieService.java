@@ -23,7 +23,7 @@ public class SerieService {
     }
 
     public Serie addSerie(Serie serie) {
-        return serieRepository.findById(serie.getId()).orElse(null);
+        return serieRepository.save(serie);
     }
 
     public void deleteSerie(String serieId) {

@@ -9,12 +9,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.beans.factory.ObjectProvider;
 
 @Controller
 public class AuthController {
-
+    private final ObjectProvider<AuthenticationManager> authenticationManagerProvider;
     @Autowired
-    private AuthenticationManager authenticationManager;
+    public AuthController(ObjectProvider<AuthenticationManager> authenticationManagerProvider) {
+        this.authenticationManagerProvider = authenticationManagerProvider;
+    }
 
     @GetMapping("/connexion")
     public String getLoginPage() {
@@ -28,7 +31,8 @@ public class AuthController {
             RedirectAttributes redirectAttributes) {
 
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+            AuthenticationManager authManager = authenticationManagerProvider.getObject();
+            authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
             return "redirect:/index";
         } catch (AuthenticationException e) {
             redirectAttributes.addFlashAttribute("error", "Invalid username or password");
