@@ -25,14 +25,15 @@ public class SecurityConfig {
                     csrf.csrfTokenRepository(customCsrfTokenRepository());
                 })
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/inscription", "/connexion", "/accueil", "/recherche", "/compte").permitAll()
+                        .requestMatchers("/inscription", "/login", "/accueil", "/recherche", "/compte").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/connexion")
-                        .permitAll()
-                        .defaultSuccessUrl("/accueil", true)
+                        .loginPage("/login") // URL de la page de connexion
+                        .loginProcessingUrl("/login") // URL de traitement du formulaire de connexion
+                        .permitAll() // Accès à tous les utilisateurs
+                        .defaultSuccessUrl("/accueil", true) // Redirection après connexion réussie
                 )
                 .logout(logout -> logout
                         .logoutSuccessUrl("/connexion?logout")
@@ -42,7 +43,6 @@ public class SecurityConfig {
     }
 
     private CsrfTokenRepository customCsrfTokenRepository() {
-        // Implémentation du CsrfTokenRepository
         return new HttpSessionCsrfTokenRepository(); // Exemple avec HttpSessionCsrfTokenRepository
     }
 
@@ -52,14 +52,9 @@ public class SecurityConfig {
     }
 
     @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth, UserService userService) throws Exception {
+    public void configureGlobal(AuthenticationManagerBuilder auth, UserService userService, PasswordEncoder passwordEncoder) throws Exception {
         auth
                 .userDetailsService(userService)
-                .passwordEncoder(passwordEncoder());
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+                .passwordEncoder(passwordEncoder);
     }
 }

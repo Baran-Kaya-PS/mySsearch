@@ -19,7 +19,7 @@ public class AuthController {
         this.authenticationManagerProvider = authenticationManagerProvider;
     }
 
-    @GetMapping("/connexion")
+    @GetMapping("/login")
     public String getLoginPage() {
         return "login";
     }
@@ -36,7 +36,7 @@ public class AuthController {
             return "redirect:/index";
         } catch (AuthenticationException e) {
             redirectAttributes.addFlashAttribute("error", "Invalid username or password");
-            return "redirect:/connexion";
+            return "redirect:/login";
         }
     }
 }
