@@ -59,14 +59,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.beans.factory.ObjectProvider;
 
 @Controller
 public class AuthController {
-
+    private final ObjectProvider<AuthenticationManager> authenticationManagerProvider;
     @Autowired
-    private AuthenticationManager authenticationManager;
+    public AuthController(ObjectProvider<AuthenticationManager> authenticationManagerProvider) {
+        this.authenticationManagerProvider = authenticationManagerProvider;
+    }
 
-    @GetMapping("/connexion")
+    @GetMapping("/login")
     public String getLoginPage() {
         return "login";
     }
@@ -78,11 +81,12 @@ public class AuthController {
             RedirectAttributes redirectAttributes) {
 
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+            AuthenticationManager authManager = authenticationManagerProvider.getObject();
+            authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
             return "redirect:/index";
         } catch (AuthenticationException e) {
             redirectAttributes.addFlashAttribute("error", "Invalid username or password");
-            return "redirect:/connexion";
+            return "redirect:/login";
         }
     }
 }
@@ -723,7 +727,7 @@ import java.util.Optional;
 
 public interface UserRepository extends MongoRepository<User, String>{
     List<User> findByEmail(String email);
-    List<User> findByName(String nom);
+    Optional<User> findByName(String nom);
     
     Optional<User> findById (String id);
 }
@@ -770,38 +774,20 @@ public class TFIDFRunner implements CommandLineRunner {
 
 --------------------------------------------------------------------------------
 
-File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\security\CsrfSecurityConfig.java
+File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\security\PasswordEncoderConfig.java
 
 package com.example.mysearch.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CsrfTokenRepository;
-import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@EnableWebSecurity
-public class CsrfSecurityConfig {
-
+public class PasswordEncoderConfig {
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> {
-                    csrf.csrfTokenRepository(customCsrfTokenRepository()); // Utiliser un repository personnalisé
-                    // Autres personnalisations CSRF...
-                });
-        // Autres configurations de sécurité...
-        return http.build();
-    }
-
-    private CsrfTokenRepository customCsrfTokenRepository() {
-        // Implémentez votre propre CsrfTokenRepository
-        return new HttpSessionCsrfTokenRepository(); // Exemple avec HttpSessionCsrfTokenRepository
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
 
@@ -812,34 +798,37 @@ File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\secur
 
 package com.example.mysearch.security;
 
+import com.example.mysearch.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
-import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
-import static org.springframework.http.HttpMethod.POST;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> {
+                    csrf.csrfTokenRepository(customCsrfTokenRepository());
+                })
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/inscription", "/connexion","/accueil","/recherche","/compte").permitAll()
+                        .requestMatchers("/inscription", "/connexion", "/accueil", "/recherche", "/compte").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/connexion")
+                        .loginPage("/login")
                         .permitAll()
                         .defaultSuccessUrl("/accueil", true)
                 )
@@ -849,10 +838,21 @@ public class SecurityConfig {
                 );
         return http.build();
     }
-    // Define your PasswordEncoder bean
+
+    private CsrfTokenRepository customCsrfTokenRepository() {
+        return new HttpSessionCsrfTokenRepository(); // Exemple avec HttpSessionCsrfTokenRepository
+    }
+
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth, UserService userService, PasswordEncoder passwordEncoder) throws Exception {
+        auth
+                .userDetailsService(userService)
+                .passwordEncoder(passwordEncoder);
     }
 }
 
@@ -1029,7 +1029,7 @@ public class SerieService {
     }
 
     public Serie addSerie(Serie serie) {
-        return serieRepository.findById(serie.getId()).orElse(null);
+        return serieRepository.save(serie);
     }
 
     public void deleteSerie(String serieId) {
@@ -1056,6 +1056,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+
 @Service
 public class SignupService {
     @Autowired
@@ -1081,15 +1082,19 @@ File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\servi
 package com.example.mysearch.service;
 import com.example.mysearch.model.User;
 import com.example.mysearch.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -1124,6 +1129,18 @@ public class UserService {
 
     public Iterable<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+
+        return org.springframework.security.core.userdetails.User
+                .withUsername(username)
+                .password(user.getPassword())
+                .authorities("USER") // or any roles you have
+                .build();
     }
 }
 
