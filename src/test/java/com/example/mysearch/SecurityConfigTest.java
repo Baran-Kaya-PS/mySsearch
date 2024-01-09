@@ -24,13 +24,13 @@ public class SecurityConfigTest {
     private MockMvc mockMvc;
 
     @Test
-    public void accessUnsecuredResourceShouldSucceed() throws Exception {
+    void accessUnsecuredResourceShouldSucceed() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    public void accessSecuredResourceUnauthenticatedShouldRedirectToLogin() throws Exception {
+    void accessSecuredResourceUnauthenticatedShouldRedirectToLogin() throws Exception {
         mockMvc.perform(get("/admin"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/login"));
@@ -38,20 +38,20 @@ public class SecurityConfigTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    public void accessSecuredResourceAsUserShouldFail() throws Exception {
+    void accessSecuredResourceAsUserShouldFail() throws Exception {
         mockMvc.perform(get("/admin"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    public void accessSecuredResourceAsAdminShouldSucceed() throws Exception {
+    void accessSecuredResourceAsAdminShouldSucceed() throws Exception {
         mockMvc.perform(get("/admin"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    public void loginWithValidCsrfTokenShouldSucceed() throws Exception {
+    void loginWithValidCsrfTokenShouldSucceed() throws Exception {
         MvcResult mvcResult = mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -70,7 +70,7 @@ public class SecurityConfigTest {
 
 
     @Test
-    public void loginWithInvalidCsrfTokenShouldFail() throws Exception {
+    void loginWithInvalidCsrfTokenShouldFail() throws Exception {
         mockMvc.perform(post("/login").with(SecurityMockMvcRequestPostProcessors.csrf().useInvalidToken())
                         .param("username", "user")
                         .param("password", "password"))
@@ -78,7 +78,7 @@ public class SecurityConfigTest {
     }
 
     @Test
-    public void loginWithValidUserShouldSucceed() throws Exception {
+    void loginWithValidUserShouldSucceed() throws Exception {
         mockMvc.perform(post("/login")
                         .with(SecurityMockMvcRequestPostProcessors.csrf()) // This will add the CSRF token
                         .param("username", "user")

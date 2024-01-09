@@ -15,7 +15,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-public class MySearchApplicationTests {
+class MySearchApplicationTests {
 
     @Autowired // injecte le bean dans le test
     private SerieRepository serieRepository;
@@ -23,7 +23,7 @@ public class MySearchApplicationTests {
     private TFIDFCalculator tfidfCalculator;
 
     @Test
-    public void shouldFetchData() {
+    void shouldFetchData() {
         String expectedTitle = "breakingbad";
 
 
@@ -34,7 +34,7 @@ public class MySearchApplicationTests {
         assertThat(series.get(0).getTitre()).isEqualTo(expectedTitle);
     }
     @Test
-    public void tfidfScoreForBreakingBadShouldBeHighestForMeth() {
+    void tfidfScoreForBreakingBadShouldBeHighestForMeth() {
         // Given
         String keyword = "meth";
         String expectedTopTitle = "breakingbad";
