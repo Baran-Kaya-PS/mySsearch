@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ComponentScan(basePackages = "com.example.mysearch")
 public class MySpringConfiguration {
-    // Vous pouvez ajouter des configurations supplémentaires ici si nécessaire
+
 }
 
 
@@ -174,25 +174,25 @@ public class HistoryControler {
         return historyService.getAllHistoryRecords();
     }
     
-    // Add a method to get a specific history record by ID
+
     @GetMapping("/{id}")
     public History getHistoryRecordById(@PathVariable Long id) {
         return historyService.getHistoryRecordById(id);
     }
     
-    // Add a method to create a new history record
+
     @PostMapping("/")
     public History createHistoryRecord(@RequestBody History historyRecord) {
         return historyService.createHistoryRecord(historyRecord);
     }
     
-    // Add a method to update an existing history record
+
     @PutMapping("/{id}")
     public History updateHistoryRecord(@PathVariable Long id, @RequestBody History historyRecord) {
         return historyService.updateHistoryRecord(id, historyRecord);
     }
     
-    // Add a method to delete a history record
+
     @DeleteMapping("/{id}")
     public void deleteHistoryRecord(@PathVariable Long id) {
         historyService.deleteHistoryRecord(id);
@@ -248,16 +248,13 @@ public class SerieControler {
     public String search(@RequestParam(required = false) String keyword, Model model) {
         if (keyword != null && !keyword.isEmpty()) {
             try {
-                // Utilisation du service pour obtenir les meilleures séries
                 List<Serie> bestSeries = (List<Serie>) serieService.searchSeriesByKeyword(keyword);
                 model.addAttribute("series", bestSeries);
             } catch (Exception e) {
                 model.addAttribute("error", "Erreur lors de la recherche : " + e.getMessage());
-                // Logger l'erreur pour le débogage
                 e.printStackTrace();
             }
         } else {
-            // Gestion du cas où aucun mot-clé n'est fourni
             model.addAttribute("error", "Veuillez entrer un mot-clé pour la recherche.");
         }
         return "index";
@@ -307,13 +304,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.mysearch.service.UserService;
-/*
-registerUser(User user): enregistrer un nouvel utilisateur.
-loginUser(LoginDto loginDto): gérer la connexion utilisateur.
-getUserProfile(String userId): obtenir le profil de l'utilisateur.
-updateUserProfile(String userId, User updatedUser): mettre à jour le profil utilisateur.
-deleteUser(String userId): supprimer un utilisateur.
- */
+
 @RestController
 @RequestMapping("/api/user")
 public class UserControler {
@@ -517,10 +508,9 @@ public class Serie {
     @Field("tfidf_vectors")
     private Map<String, Double> vecteursTFIDF = new HashMap<>();
 
-    // Constructeurs, getters et setters
+
 
     public Serie() {
-        // Constructeur par défaut nécessaire pour Spring Data
     }
 
     public Serie(String id, String titre, Map<String, Double> vecteursTFIDF) {
@@ -529,7 +519,7 @@ public class Serie {
         this.vecteursTFIDF = vecteursTFIDF;
     }
 
-    // Getters et Setters
+
 
     public String getId() {
         return id;
@@ -551,11 +541,12 @@ public class Serie {
         return vecteursTFIDF;
     }
 
+    private String imageName;
+
     public void setVecteursTFIDF(Map<String, Double> vecteursTFIDF) {
         this.vecteursTFIDF = vecteursTFIDF;
     }
 
-    // Méthode toString pour un affichage facile des informations de la série
 
     @Override
     public String toString() {
@@ -569,6 +560,8 @@ public class Serie {
     public Map<String, Double> getTfidfVectors() {
         return this.vecteursTFIDF;
     }
+
+
 }
 
 
@@ -823,14 +816,15 @@ public class SecurityConfig {
                     csrf.csrfTokenRepository(customCsrfTokenRepository());
                 })
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/inscription", "/connexion", "/accueil", "/recherche", "/compte").permitAll()
+                        .requestMatchers("/inscription", "/login", "/accueil", "/recherche", "/compte","/","/api/serie/search","/image/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login")
-                        .permitAll()
-                        .defaultSuccessUrl("/accueil", true)
+                        .loginPage("/login") // URL de la page de connexion
+                        .loginProcessingUrl("/login") // URL de traitement du formulaire de connexion
+                        .permitAll() // Accès à tous les utilisateurs
+                        .defaultSuccessUrl("/accueil", true) // Redirection après connexion réussie
                 )
                 .logout(logout -> logout
                         .logoutSuccessUrl("/connexion?logout")
@@ -980,8 +974,6 @@ public class SearchService {
     }
 
     public List<Serie> searchSeriesByKeyword(String keyword) {
-        // Ici, nous recherchons toutes les séries et effectuons le filtrage en mémoire
-        // Cela pourrait être optimisé en utilisant une recherche de texte MongoDB si les performances sont un problème
         List<Serie> allSeries = serieRepository.findAll();
         return allSeries.stream()
                 .filter(serie -> {
@@ -996,7 +988,6 @@ public class SearchService {
                 .collect(Collectors.toList());
     }
 
-    // ... d'autres méthodes si nécessaire
 }
 
 
@@ -1010,6 +1001,10 @@ import com.example.mysearch.model.Serie;
 import com.example.mysearch.repository.SerieRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -1036,9 +1031,20 @@ public class SerieService {
         serieRepository.deleteById(serieId);
     }
     public Iterable<Serie> searchSeriesByKeyword(String keyword) {
-        return serieRepository.findAll().stream()
-                .filter(serie -> serie.getVecteursTFIDF().containsKey(keyword))
-                .sorted((s1,s2) -> s2.getVecteursTFIDF().get(keyword).compareTo(s1.getVecteursTFIDF().get(keyword)))
+        String[] keywords = keyword.split("\\s+"); // Divisez la chaîne en mots clés
+        List<Serie> allSeries = serieRepository.findAll();
+
+        // Calcul des scores TFIDF pour chaque série basé sur tous les mots clés
+        return allSeries.stream()
+                .map(serie -> new AbstractMap.SimpleEntry<>(
+                        serie,
+                        Arrays.stream(keywords)
+                                .mapToDouble(key -> serie.getTfidfVectors().getOrDefault(key.toLowerCase(), 0.0))
+                                .sum()
+                ))
+                .filter(entry -> entry.getValue() > 0) // Filtrez les séries avec un score > 0
+                .sorted(Map.Entry.<Serie, Double>comparingByValue().reversed())
+                .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
 }
@@ -1258,7 +1264,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-public class MySearchApplicationTests {
+class MySearchApplicationTests {
 
     @Autowired // injecte le bean dans le test
     private SerieRepository serieRepository;
@@ -1266,7 +1272,7 @@ public class MySearchApplicationTests {
     private TFIDFCalculator tfidfCalculator;
 
     @Test
-    public void shouldFetchData() {
+    void shouldFetchData() {
         String expectedTitle = "breakingbad";
 
 
@@ -1277,7 +1283,7 @@ public class MySearchApplicationTests {
         assertThat(series.get(0).getTitre()).isEqualTo(expectedTitle);
     }
     @Test
-    public void tfidfScoreForBreakingBadShouldBeHighestForMeth() {
+    void tfidfScoreForBreakingBadShouldBeHighestForMeth() {
         // Given
         String keyword = "meth";
         String expectedTopTitle = "breakingbad";
@@ -1289,6 +1295,102 @@ public class MySearchApplicationTests {
         assertThat(topSeries).isNotEmpty();
         assertThat(topSeries.get(0)).containsEntry("title", expectedTopTitle);
     }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:/Users/admin/projects/mySsearch/src\test\java\com\example\mysearch\SecurityConfigTest.java
+
+package com.example.mysearch;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.security.web.server.csrf.CsrfToken;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class SecurityConfigTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    void accessUnsecuredResourceShouldSucceed() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void accessSecuredResourceUnauthenticatedShouldRedirectToLogin() throws Exception {
+        mockMvc.perform(get("/admin"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void accessSecuredResourceAsUserShouldFail() throws Exception {
+        mockMvc.perform(get("/admin"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void accessSecuredResourceAsAdminShouldSucceed() throws Exception {
+        mockMvc.perform(get("/admin"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void loginWithValidCsrfTokenShouldSucceed() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get("/login"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Extract the CsrfToken object from the request attribute
+        CsrfToken csrfToken = (CsrfToken) mvcResult.getRequest().getAttribute(CsrfToken.class.getName());
+
+        // Now we can use the token value in the subsequent POST request
+        mockMvc.perform(post("/login")
+                        .param("username", "user")
+                        .param("password", "password")
+                        .param(csrfToken.getParameterName(), csrfToken.getToken()))
+                .andExpect(status().is3xxRedirection());
+    }
+
+
+
+    @Test
+    void loginWithInvalidCsrfTokenShouldFail() throws Exception {
+        mockMvc.perform(post("/login").with(SecurityMockMvcRequestPostProcessors.csrf().useInvalidToken())
+                        .param("username", "user")
+                        .param("password", "password"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void loginWithValidUserShouldSucceed() throws Exception {
+        mockMvc.perform(post("/login")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()) // This will add the CSRF token
+                        .param("username", "user")
+                        .param("password", "password"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/accueil")); // assuming you redirect to "/accueil" on success
+    }
+
 }
 
 
