@@ -4,6 +4,10 @@ import com.example.mysearch.model.Serie;
 import com.example.mysearch.repository.SerieRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,9 +34,20 @@ public class SerieService {
         serieRepository.deleteById(serieId);
     }
     public Iterable<Serie> searchSeriesByKeyword(String keyword) {
-        return serieRepository.findAll().stream()
-                .filter(serie -> serie.getVecteursTFIDF().containsKey(keyword))
-                .sorted((s1,s2) -> s2.getVecteursTFIDF().get(keyword).compareTo(s1.getVecteursTFIDF().get(keyword)))
+        String[] keywords = keyword.split("\\s+"); // Divisez la chaîne en mots clés
+        List<Serie> allSeries = serieRepository.findAll();
+
+        // Calcul des scores TFIDF pour chaque série basé sur tous les mots clés
+        return allSeries.stream()
+                .map(serie -> new AbstractMap.SimpleEntry<>(
+                        serie,
+                        Arrays.stream(keywords)
+                                .mapToDouble(key -> serie.getTfidfVectors().getOrDefault(key.toLowerCase(), 0.0))
+                                .sum()
+                ))
+                .filter(entry -> entry.getValue() > 0) // Filtrez les séries avec un score > 0
+                .sorted(Map.Entry.<Serie, Double>comparingByValue().reversed())
+                .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
 }
