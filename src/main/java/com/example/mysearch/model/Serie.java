@@ -17,19 +17,19 @@ public class Serie {
     @Field("tfidf_vectors")
     private Map<String, Double> vecteursTFIDF = new HashMap<>();
 
-    // Constructeurs, getters et setters
+
 
     public Serie() {
-        // Constructeur par défaut nécessaire pour Spring Data
     }
 
-    public Serie(String id, String titre, Map<String, Double> vecteursTFIDF) {
+    public Serie(String id, String titre, Map<String, Double> vecteursTFIDF, String imageName) {
         this.id = id;
         this.titre = titre;
         this.vecteursTFIDF = vecteursTFIDF;
+        this.imageName = imageName;
     }
 
-    // Getters et Setters
+
 
     public String getId() {
         return id;
@@ -51,11 +51,12 @@ public class Serie {
         return vecteursTFIDF;
     }
 
+    private String imageName;
+
     public void setVecteursTFIDF(Map<String, Double> vecteursTFIDF) {
         this.vecteursTFIDF = vecteursTFIDF;
     }
 
-    // Méthode toString pour un affichage facile des informations de la série
 
     @Override
     public String toString() {
@@ -68,5 +69,12 @@ public class Serie {
 
     public Map<String, Double> getTfidfVectors() {
         return this.vecteursTFIDF;
+    }
+
+    public String getImageName() {
+        return imageName;
+    }
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
     }
 }

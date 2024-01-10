@@ -22,8 +22,6 @@ public class SearchService {
     }
 
     public List<Serie> searchSeriesByKeyword(String keyword) {
-        // Ici, nous recherchons toutes les séries et effectuons le filtrage en mémoire
-        // Cela pourrait être optimisé en utilisant une recherche de texte MongoDB si les performances sont un problème
         List<Serie> allSeries = serieRepository.findAll();
         return allSeries.stream()
                 .filter(serie -> {
@@ -38,5 +36,4 @@ public class SearchService {
                 .collect(Collectors.toList());
     }
 
-    // ... d'autres méthodes si nécessaire
 }

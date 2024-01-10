@@ -26,25 +26,25 @@ public class HistoryControler {
         return historyService.getAllHistoryRecords();
     }
     
-    // Add a method to get a specific history record by ID
+
     @GetMapping("/{id}")
     public History getHistoryRecordById(@PathVariable Long id) {
         return historyService.getHistoryRecordById(id);
     }
     
-    // Add a method to create a new history record
+
     @PostMapping("/")
     public History createHistoryRecord(@RequestBody History historyRecord) {
         return historyService.createHistoryRecord(historyRecord);
     }
     
-    // Add a method to update an existing history record
+
     @PutMapping("/{id}")
     public History updateHistoryRecord(@PathVariable Long id, @RequestBody History historyRecord) {
         return historyService.updateHistoryRecord(id, historyRecord);
     }
     
-    // Add a method to delete a history record
+
     @DeleteMapping("/{id}")
     public void deleteHistoryRecord(@PathVariable Long id) {
         historyService.deleteHistoryRecord(id);

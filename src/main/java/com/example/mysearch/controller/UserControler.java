@@ -6,13 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.mysearch.service.UserService;
-/*
-registerUser(User user): enregistrer un nouvel utilisateur.
-loginUser(LoginDto loginDto): gérer la connexion utilisateur.
-getUserProfile(String userId): obtenir le profil de l'utilisateur.
-updateUserProfile(String userId, User updatedUser): mettre à jour le profil utilisateur.
-deleteUser(String userId): supprimer un utilisateur.
- */
+
 @RestController
 @RequestMapping("/api/user")
 public class UserControler {
