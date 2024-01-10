@@ -22,11 +22,10 @@ public class Serie {
     public Serie() {
     }
 
-    public Serie(String id, String titre, Map<String, Double> vecteursTFIDF, String imageName) {
+    public Serie(String id, String titre, Map<String, Double> vecteursTFIDF) {
         this.id = id;
         this.titre = titre;
         this.vecteursTFIDF = vecteursTFIDF;
-        this.imageName = imageName;
     }
 
 
@@ -71,10 +70,5 @@ public class Serie {
         return this.vecteursTFIDF;
     }
 
-    public String getImageName() {
-        return imageName;
-    }
-    public void setImageName(String imageName) {
-        this.imageName = imageName;
-    }
+
 }

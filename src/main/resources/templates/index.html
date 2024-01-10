@@ -73,7 +73,7 @@
         <div class="row text-center mt-4">
             <div th:each="serie : ${series}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
                 <a th:href="@{/serie/{id}(id=${serie.id})}">
-                    <img th:src="@{/images/{imageName}(imageName=${serie.imageName})}" alt="Image de la série" class="img-fluid">
+                    <img th:src="@{/image/{serieName}.jpg(serieName=${serie.titre})}" alt="Image de la série" class="img-fluid">
                     <p class="mt-2" th:text="${serie.titre}">Nom de la série</p>
                 </a>
             </div>
