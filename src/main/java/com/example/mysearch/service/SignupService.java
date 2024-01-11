@@ -22,4 +22,8 @@ public class SignupService {
         newUser.setPassword(passwordEncoder.encode(password));
         userRepository.save(newUser);
     }
+
+    public boolean userExists(String name) {
+        return userRepository.existsByName(name);
+    }
 }
