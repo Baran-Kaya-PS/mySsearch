@@ -2,9 +2,82 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Series Page</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            padding-top: 40px;
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            height: 100px;
+            width: 100%;
+        }
+        .navbar {
+            padding: 20px;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">MySearch</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Accueil</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Recherche</a>
+            </li>
+        </ul>
+    </div>
+</nav>
 
+<div class="container">
+    <form action="/search" method="get" class="search-bar d-flex justify-content-center">
+        <input type="text" name="keyword" class="form-control" placeholder="Recherchez une série">
+        <button type="submit" class="btn btn-outline-primary ml-2">Rechercher</button>
+    </form>
+
+    <div class="video-container mt-5">
+        <iframe src="lien_video" frameborder="0" allowfullscreen></iframe>
+    </div>
+    <div class="text-center mt-3">
+        <h2>nom de la série</h2>
+        <p>Description de la série</p>
+    </div>
+</div>
+
+<footer class="footer mt-auto py-3 bg-secondary">
+    <div class="container">
+        <span class="text-muted">Emplacement du footer</span>
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>
