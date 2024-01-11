@@ -22,6 +22,7 @@ class MySearchApplicationTests {
     @Autowired
     private TFIDFCalculator tfidfCalculator;
 
+
     @Test
     void shouldFetchData() {
         String expectedTitle = "breakingbad";
