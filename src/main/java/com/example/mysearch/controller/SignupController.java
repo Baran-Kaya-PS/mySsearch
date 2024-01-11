@@ -30,7 +30,6 @@ public class SignupController {
     public ModelAndView inscriptionSubmit(@Valid User user, BindingResult bindingResult, HttpServletResponse response) {
         ModelAndView modelAndView = new ModelAndView();
         if (signupService.userExists(user.getName())) {
-
             response.setStatus(HttpStatus.BAD_REQUEST.value());
             modelAndView.setViewName("signup");
             modelAndView.addObject("user", user);
