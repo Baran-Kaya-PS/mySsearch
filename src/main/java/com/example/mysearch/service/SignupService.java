@@ -16,6 +16,7 @@ public class SignupService {
     private PasswordEncoder passwordEncoder;
 
     public void enregistrer(String username, String email, String password) {
+        System.out.println("Enregistrement utilisateur : " + username);
         User newUser = new User();
         newUser.setName(username);
         newUser.setEmail(email);

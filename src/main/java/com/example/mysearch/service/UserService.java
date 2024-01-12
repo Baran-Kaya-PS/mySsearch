@@ -64,4 +64,11 @@ public class UserService implements UserDetailsService {
                 .authorities("USER") // or any roles you have
                 .build();
     }
+
+    public void removeUserFromDatabase(String username) {
+        userRepository.deleteByName(username);
+    }
+    public void addSearchToHistory(String name,String search) {
+        userRepository.addSearchToHistory(name,search);
+    }
 }

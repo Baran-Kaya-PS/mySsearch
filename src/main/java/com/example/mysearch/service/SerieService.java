@@ -50,4 +50,11 @@ public class SerieService {
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
+    public Iterable<Serie> searchSeriesByName(String name) {
+        // si le nom est dans la base de données on retourne la série
+        if (serieRepository.existsByTitre(name)) {
+            return serieRepository.findByTitre(name);
+        }
+        return serieRepository.findByTitre(name);
+    }
 }

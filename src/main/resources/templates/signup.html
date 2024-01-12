@@ -26,26 +26,27 @@
 <div class="container">
     <h2 class="text-center">Inscription</h2>
     <form id="registrationForm" action="/inscription" method="POST">
-        <!-- ...autres champs... -->
+        <!-- Email -->
         <div class="form-group">
             <label for="email">Email</label>
             <input type="email" class="form-control" id="email" name="email" placeholder="Entrez votre email">
-            <!-- ... -->
         </div>
+
+        <!-- Nom d'utilisateur -->
         <div class="form-group">
             <label for="new-username">Nom d'utilisateur</label>
-            <input type="text" class="form-control" id="new-username" name="username" placeholder="Créez un nom d'utilisateur">
-            <!-- ... -->
+            <input type="text" class="form-control" id="new-username" name="name" placeholder="Créez un nom d'utilisateur">
         </div>
+
+        <!-- Mot de passe -->
         <div class="form-group">
             <label for="new-password">Mot de passe</label>
             <input type="password" class="form-control" id="new-password" name="password" placeholder="Créez un mot de passe">
-            <!-- ... -->
         </div>
-        <!-- ... -->
+
         <button type="submit" class="btn btn-primary btn-block btn-margin-bottom">S'inscrire</button>
-        <!-- ... -->
     </form>
+
     <div class="text-center">
         <a href="/connexion">Déjà inscrit ? Connectez-vous</a>
 </div>
@@ -53,5 +54,6 @@
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</div>
 </body>
 </html>

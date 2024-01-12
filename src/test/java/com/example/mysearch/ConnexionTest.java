@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,17 +22,25 @@ class ConnexionTest {
 
     // This method will be called before each test execution
     @BeforeEach
-    void setUp() {
-        // You can add any common setup code here, if needed
-    }
 
     @Test
     void validUserShouldLoginSuccessfully() throws Exception {
+        // Créez d'abord une inscription
+        mockMvc.perform(post("/inscription")
+                        .param("name", "validUser")
+                        .param("password", "validPassword")
+                        .param("email", "validuser@example.com"))
+                .andExpect(status().is3xxRedirection()) // Vous attendez une redirection après une inscription réussie
+                .andExpect(redirectedUrl("/login")); // Assurez-vous que cette URL correspond à celle attendue après l'inscription
+
+        // Ensuite, tentez de vous connecter avec l'utilisateur créé
         mockMvc.perform(post("/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("username", "validUser")
                         .param("password", "validPassword"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/")); // Replace with the expected redirect URL after successful login
+                .andExpect(status().is3xxRedirection()) // Vous attendez une redirection après une connexion réussie
+                .andExpect(redirectedUrl("/index")); // Assurez-vous que cette URL correspond à celle attendue après la connexion réussie
     }
 
     @Test

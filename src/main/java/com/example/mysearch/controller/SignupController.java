@@ -29,18 +29,21 @@ public class SignupController {
     @PostMapping("/inscription")
     public ModelAndView inscriptionSubmit(@Valid User user, BindingResult bindingResult, HttpServletResponse response) {
         ModelAndView modelAndView = new ModelAndView();
+
         if (signupService.userExists(user.getName())) {
-            response.setStatus(HttpStatus.BAD_REQUEST.value());
+            bindingResult.rejectValue("name", "error.user", "Ce nom d'utilisateur existe déjà");
+            response.setStatus(HttpStatus.BAD_REQUEST.value()); // Set the HTTP status here.
+            modelAndView.addObject("user", user);
+            modelAndView.setViewName("signup");
+            return modelAndView;
+        }
+
+        if (bindingResult.hasErrors()) {
             modelAndView.setViewName("signup");
             modelAndView.addObject("user", user);
-            bindingResult.rejectValue("name", "error.user", "Ce nom d'utilisateur existe déjà"); // RejectValue -> erreur n°400
             return modelAndView;
         }
-        if (bindingResult.hasErrors()) {
-            modelAndView.setViewName("signup"); // Utilisez le nom de votre vue d'inscription
-            modelAndView.addObject("user", user);
-            return modelAndView;
-        }
+
         signupService.enregistrer(user.getName(), user.getEmail(), user.getPassword());
         modelAndView.setViewName("redirect:/login");
         return modelAndView;
