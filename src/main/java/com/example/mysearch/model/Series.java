@@ -1,5 +1,7 @@
 package com.example.mysearch.model;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -7,54 +9,35 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Document(collection = "series")
-public class Serie {
+public class Series {
+    @Setter
+    @Getter
     @Id
     private String id;
 
+    @Setter
+    @Getter
     @Field("title")
     private String titre;
 
+    @Setter
+    @Getter
     @Field("tfidf_vectors")
     private Map<String, Double> vecteursTFIDF = new HashMap<>();
 
 
 
-    public Serie() {
+    public Series() {
     }
 
-    public Serie(String id, String titre, Map<String, Double> vecteursTFIDF) {
+    public Series(String id, String titre, Map<String, Double> vecteursTFIDF) {
         this.id = id;
         this.titre = titre;
         this.vecteursTFIDF = vecteursTFIDF;
     }
 
-
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getTitre() {
-        return titre;
-    }
-
-    public void setTitre(String titre) {
-        this.titre = titre;
-    }
-
-    public Map<String, Double> getVecteursTFIDF() {
-        return vecteursTFIDF;
-    }
 
     private String imageName;
-
-    public void setVecteursTFIDF(Map<String, Double> vecteursTFIDF) {
-        this.vecteursTFIDF = vecteursTFIDF;
-    }
 
 
     @Override
@@ -65,10 +48,4 @@ public class Serie {
                 ", vecteursTFIDF=" + vecteursTFIDF +
                 '}';
     }
-
-    public Map<String, Double> getTfidfVectors() {
-        return this.vecteursTFIDF;
-    }
-
-
 }

@@ -206,7 +206,7 @@ File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\contr
 
 package com.example.mysearch.controller;
 
-import com.example.mysearch.model.Serie;
+import com.example.mysearch.model.Series;
 import com.example.mysearch.service.SerieService;
 import com.example.mysearch.utils.TFIDFCalculator;
 import org.springframework.http.ResponseEntity;
@@ -698,7 +698,7 @@ public interface HistoryRepository extends MongoRepository<History, String>{
 File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\repository\SerieRepository.java
 
 package com.example.mysearch.repository;
-import com.example.mysearch.model.Serie;
+import com.example.mysearch.model.Series;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 public interface SerieRepository extends MongoRepository<Serie, String>{
@@ -952,7 +952,7 @@ File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\servi
 
 package com.example.mysearch.service;
 
-import com.example.mysearch.model.Serie;
+import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import com.example.mysearch.utils.TFIDFCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -997,7 +997,7 @@ File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\servi
 
 package com.example.mysearch.service;
 import com.example.mysearch.controller.SerieControler;
-import com.example.mysearch.model.Serie;
+import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import org.springframework.stereotype.Service;
 
@@ -1158,7 +1158,7 @@ File: C:/Users/admin/projects/mySsearch/src\main\java\com\example\mysearch\utils
 package com.example.mysearch.utils;
 
 import com.example.mysearch.config.MySpringConfiguration;
-import com.example.mysearch.model.Serie;
+import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -1249,7 +1249,7 @@ File: C:/Users/admin/projects/mySsearch/src\test\java\com\example\mysearch\MySea
 
 package com.example.mysearch;
 
-import com.example.mysearch.model.Serie;
+import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import com.example.mysearch.utils.TFIDFCalculator;
 import org.junit.jupiter.api.Test;

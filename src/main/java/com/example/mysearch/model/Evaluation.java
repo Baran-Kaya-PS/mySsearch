@@ -34,4 +34,8 @@ public class Evaluation {
     public String toCSV(){
         return id + "," + utilisateurId + "," + serieId + "," + like;
     }
+
+    public Boolean isLiked() {
+        return like;
+    }
 }

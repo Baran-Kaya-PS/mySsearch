@@ -1,15 +1,18 @@
 package com.example.mysearch.model;
 
-// importation
+import lombok.Getter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document; // importation de Document -> signifie que la classe est un document MongoDB
-import org.springframework.data.mongodb.core.mapping.Field; // importation de Field -> signifie que le champ est un champ MongoDB
-import jakarta.validation.constraints.NotBlank; // Fonction NotBlank -> signifie que le champ ne doit pas être vide
-import jakarta.validation.constraints.Email; // Fonction Email -> signifie que le champ doit être un email
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.ArrayList;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+@Getter
 @Document(collection = "users")
 public class User {
     @Id
@@ -27,67 +30,53 @@ public class User {
 
     @Field("historique_recherches")
     private List<String> historiqueRecherches;
-
-    private List<Evaluation> evaluations;
+    @Field("viewed_series_post_search")
+    private List<Evaluation> viewedSeriesPostSearch;
+    @Field("evaluations")
+    private Map<String, Boolean> evaluations;
 
 
     public User() {}
-
-    public String getId() {
-        return id;
-    }
 
     public void setId(String id) {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String nom) {
-        this.name = nom;
-    }
-
-    public String getEmail() {
-        return email;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setEmail(String email) {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
     }
 
-    public List<String> getHistoriqueRecherches() { return historiqueRecherches; }
-
-    public void setHistoriqueRecherches(List<String> historiqueRecherches) {this.historiqueRecherches = historiqueRecherches;}
-
-    public List<Evaluation> getEvaluations() {
-        return evaluations;
+    public void setHistoriqueRecherches(List<String> historiqueRecherches) {
+        this.historiqueRecherches = historiqueRecherches;
     }
 
-    public void setEvaluations(List<Evaluation> evaluations) {
+    public void setViewedSeriesPostSearch(List<Evaluation> viewedSeriesPostSearch) {
+        this.viewedSeriesPostSearch = viewedSeriesPostSearch;
+    }
+
+    public void setEvaluations(Map<String, Boolean> evaluations) {
         this.evaluations = evaluations;
     }
 
     public void addEvaluation(Evaluation evaluation) {
         if (this.evaluations == null) {
-            this.evaluations = new ArrayList<>();
+            this.evaluations = new HashMap<String, Boolean>();
         }
-        this.evaluations.add(evaluation);
+        this.evaluations.put(evaluation.getSerieId(), evaluation.isLiked());
     }
 
-    public User(String nom, String email, String motDePasse, List<String> historiqueRecherches, List<Evaluation> evaluations) {
-        this.name = nom;
+    public User(String name, String email, String password, List<String> historiqueRecherches, Map<String, Boolean> evaluations) {
+        this.name = name;
         this.email = email;
-        this.password = motDePasse;
+        this.password = password;
         this.historiqueRecherches = historiqueRecherches;
         this.evaluations = evaluations;
     }

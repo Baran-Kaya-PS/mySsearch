@@ -1,11 +1,10 @@
 package com.example.mysearch;
 
-import com.example.mysearch.model.Serie;
+import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import com.example.mysearch.utils.TFIDFCalculator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Collections;
@@ -28,7 +27,7 @@ class MySearchApplicationTests {
         String expectedTitle = "breakingbad";
 
 
-        List<Serie> series = serieRepository.findByTitre(expectedTitle);
+        List<Series> series = serieRepository.findByTitre(expectedTitle);
 
 
         assertThat(series).isNotEmpty();

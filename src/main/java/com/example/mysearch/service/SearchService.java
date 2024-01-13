@@ -1,6 +1,6 @@
 package com.example.mysearch.service;
 
-import com.example.mysearch.model.Serie;
+import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import com.example.mysearch.utils.TFIDFCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +21,16 @@ public class SearchService {
         this.tfidfCalculator = tfidfCalculator;
     }
 
-    public List<Serie> searchSeriesByKeyword(String keyword) {
-        List<Serie> allSeries = serieRepository.findAll();
+    public List<Series> searchSeriesByKeyword(String keyword) {
+        List<Series> allSeries = serieRepository.findAll();
         return allSeries.stream()
                 .filter(serie -> {
-                    Map<String, Double> tfidfVectors = serie.getTfidfVectors();
+                    Map<String, Double> tfidfVectors = serie.getvecteursTFIDF();
                     return tfidfVectors != null && tfidfVectors.containsKey(keyword) && tfidfVectors.get(keyword) > 0;
                 })
                 .sorted((serie1, serie2) -> {
-                    double score1 = serie1.getTfidfVectors().get(keyword);
-                    double score2 = serie2.getTfidfVectors().get(keyword);
+                    double score1 = serie1.getvecteursTFIDF().get(keyword);
+                    double score2 = serie2.getvecteursTFIDF().get(keyword);
                     return Double.compare(score2, score1);
                 })
                 .collect(Collectors.toList());

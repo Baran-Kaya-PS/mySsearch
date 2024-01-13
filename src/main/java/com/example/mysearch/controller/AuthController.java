@@ -52,7 +52,6 @@ public class AuthController {
 
             return "redirect:/";
         } catch (AuthenticationException e) {
-            // Gérer les erreurs d'authentification
             return "/login";
         }
     }

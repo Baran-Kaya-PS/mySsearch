@@ -1,17 +1,16 @@
 package com.example.mysearch.utils;
 
 import com.example.mysearch.config.MySpringConfiguration;
-import com.example.mysearch.model.Serie;
+import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.text.Normalizer;
 import java.util.List;
-import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
@@ -53,10 +52,10 @@ public class TFIDFCalculator {
     }
 
     public List<Map<String, Object>> findTopSeries(List<String> terms, int n) {
-        List<Serie> seriesList = serieRepository.findAll();
+        List<Series> seriesList = serieRepository.findAll();
         List<Map<String, Object>> seriesSimilarities = new ArrayList<>();
 
-        for (Serie serie : seriesList) {
+        for (Series serie : seriesList) {
             double cumulativeTfidfScore = terms.stream()
                     .mapToDouble(term -> serie.getVecteursTFIDF().getOrDefault(term.toLowerCase(), 0.0))
                     .sum();
