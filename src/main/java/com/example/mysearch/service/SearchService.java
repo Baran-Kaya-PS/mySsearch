@@ -25,12 +25,12 @@ public class SearchService {
         List<Series> allSeries = serieRepository.findAll();
         return allSeries.stream()
                 .filter(serie -> {
-                    Map<String, Double> tfidfVectors = serie.getvecteursTFIDF();
+                    Map<String, Double> tfidfVectors = serie.getVecteursTFIDF();
                     return tfidfVectors != null && tfidfVectors.containsKey(keyword) && tfidfVectors.get(keyword) > 0;
                 })
                 .sorted((serie1, serie2) -> {
-                    double score1 = serie1.getvecteursTFIDF().get(keyword);
-                    double score2 = serie2.getvecteursTFIDF().get(keyword);
+                    double score1 = serie1.getVecteursTFIDF().get(keyword);
+                    double score2 = serie2.getVecteursTFIDF().get(keyword);
                     return Double.compare(score2, score1);
                 })
                 .collect(Collectors.toList());

@@ -41,7 +41,7 @@ public class SerieService {
                 .map(serie -> new AbstractMap.SimpleEntry<>(
                         serie,
                         Arrays.stream(keywords)
-                                .mapToDouble(key -> serie.getvecteursTFIDF().getOrDefault(key.toLowerCase(), 0.0))
+                                .mapToDouble(key -> serie.getVecteursTFIDF().getOrDefault(key.toLowerCase(), 0.0))
                                 .sum()
                 ))
                 .filter(entry -> entry.getValue() > 0) // Filtrez les séries avec un score > 0

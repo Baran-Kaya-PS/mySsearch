@@ -1,6 +1,8 @@
 package com.example.mysearch.controller;
 
 import com.example.mysearch.model.Series;
+import com.example.mysearch.model.User;
+import com.example.mysearch.service.HistoryService;
 import com.example.mysearch.service.SerieService;
 import com.example.mysearch.service.UserService;
 import com.example.mysearch.utils.TFIDFCalculator;
@@ -20,11 +22,13 @@ public class SerieControler {
     private final SerieService serieService;
     private final UserService userService;
     private final TFIDFCalculator tfidfCalculator;
+    private final HistoryService historyService;
 
-    public SerieControler(SerieService serieService, UserService userService, TFIDFCalculator tfidfCalculator) {
+    public SerieControler(SerieService serieService, UserService userService, TFIDFCalculator tfidfCalculator, HistoryService historyService) {
         this.serieService = serieService;
         this.userService = userService;
         this.tfidfCalculator = tfidfCalculator;
+        this.historyService = historyService;
     }
     public ResponseEntity<Iterable<Series>> getAllSeries() {
         Iterable<Series> series = serieService.getAllSeries();
@@ -48,8 +52,14 @@ public class SerieControler {
             try {
                 List<Series> bestSeries = (List<Series>) serieService.searchSeriesByKeyword(keyword);
                 model.addAttribute("series", bestSeries);
+
                 String username = principal.getName();
-                userService.addSearchToHistory(principal.getName(),keyword);
+                User user = userService.getUserByUsername(username);
+                if (user != null) {
+                    String userId = user.getId();
+                    historyService.addSearchToHistory(userId, keyword);
+                }
+
             } catch (Exception e) {
                 model.addAttribute("error", "Erreur lors de la recherche : " + e.getMessage());
                 e.printStackTrace();
@@ -59,5 +69,6 @@ public class SerieControler {
         }
         return "index";
     }
+
 
 }

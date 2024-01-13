@@ -1,31 +1,26 @@
 package com.example.mysearch.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@Data
 @Document(collection = "series")
 public class Series {
-    @Setter
-    @Getter
     @Id
     private String id;
 
-    @Setter
-    @Getter
     @Field("title")
     private String titre;
 
-    @Setter
-    @Getter
     @Field("tfidf_vectors")
     private Map<String, Double> vecteursTFIDF = new HashMap<>();
 
-
+    private String imageName;
 
     public Series() {
     }
@@ -35,10 +30,6 @@ public class Series {
         this.titre = titre;
         this.vecteursTFIDF = vecteursTFIDF;
     }
-
-
-    private String imageName;
-
 
     @Override
     public String toString() {

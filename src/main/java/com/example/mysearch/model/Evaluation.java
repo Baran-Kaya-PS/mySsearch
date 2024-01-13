@@ -1,37 +1,34 @@
 package com.example.mysearch.model;
-
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@Data
+@Document
 public class Evaluation {
     private String id;
     private String utilisateurId;
-    @Setter
-    @Getter
     private String serieId;
-    @Setter
     private boolean like;
 
-    public Evaluation(){}
+    public Evaluation() {}
+
     public Evaluation(String id, String utilisateurId, String serieId, boolean like) {
+        this.id = id;
+        this.utilisateurId = utilisateurId;
         this.serieId = serieId;
         this.like = like;
     }
 
-    public boolean getLike() {
-        return like;
-    }
-
-    public String toString(){
+    public String toString() {
         return "Evaluation{" +
                 "id='" + id + '\'' +
                 ", utilisateurId='" + utilisateurId + '\'' +
                 ", serieId='" + serieId + '\'' +
-                ", note=" + like +
+                ", like=" + like +
                 '}';
     }
-    public String toCSV(){
+
+    public String toCSV() {
         return id + "," + utilisateurId + "," + serieId + "," + like;
     }
 

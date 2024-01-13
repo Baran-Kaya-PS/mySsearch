@@ -3,10 +3,11 @@ package com.example.mysearch.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Data
 @Document(collection = "historique")
 public class History {
     @Id
@@ -17,12 +18,6 @@ public class History {
     private List<String> recherche;
     private List<String> resultats;
     private String serieId;
-    public String getSerieId() {
-        return serieId;
-    }
-    public void setSerieId(String serieId) {
-        this.serieId = serieId;
-    }
 
     public History() {
         this.date = new ArrayList<>();
@@ -76,6 +71,14 @@ public class History {
 
     public void setResultats(List<String> resultats) {
         this.resultats = resultats;
+    }
+
+    public String getSerieId() {
+        return serieId;
+    }
+
+    public void setSerieId(String serieId) {
+        this.serieId = serieId;
     }
 
     @Override

@@ -71,4 +71,8 @@ public class UserService implements UserDetailsService {
     public void addSearchToHistory(String name,String search) {
         userRepository.addSearchToHistory(name,search);
     }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByName(username).orElse(null);
+    }
 }
