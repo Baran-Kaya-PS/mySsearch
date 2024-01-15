@@ -39,12 +39,12 @@ public class SerieService {
         List<Series> allSeries = serieRepository.findAll();
 
         // Calcul des scores TFIDF pour chaque série basé sur tous les mots clés
-        return allSeries.stream()
-                .map(serie -> new AbstractMap.SimpleEntry<>(
-                        serie,
-                        Arrays.stream(keywords)
-                                .mapToDouble(key -> serie.getVecteursTFIDF().getOrDefault(key.toLowerCase(), 0.0))
-                                .sum()
+        return allSeries.stream() // Pour chaque série
+                .map(serie -> new AbstractMap.SimpleEntry<>( // série deviens une entrée de la map
+                        serie, // clé = série
+                        Arrays.stream(keywords) // flux de mots clés
+                                .mapToDouble(key -> serie.getVecteursTFIDF().getOrDefault(key.toLowerCase(), 0.0)) // pour chaque mot clé, récupérez le score TFIDF de la série
+                                .sum() // somme des scores TFIDF
                 ))
                 .filter(entry -> entry.getValue() > 0) // Filtrez les séries avec un score > 0
                 .sorted(Map.Entry.<Series, Double>comparingByValue().reversed())

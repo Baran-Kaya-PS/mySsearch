@@ -77,4 +77,7 @@ public class HistoryService {
         return historyRepository.save(history);
     }
 
+    public History getHistoryByUserId(String userId) {
+        return historyRepository.findByUtilisateurId(userId).orElse(null);
+    }
 }
