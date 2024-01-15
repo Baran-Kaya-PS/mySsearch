@@ -2,6 +2,7 @@ package com.example.mysearch.service;
 import com.example.mysearch.model.History;
 import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.AbstractMap;
@@ -14,9 +15,10 @@ import java.util.stream.Collectors;
 public class SerieService {
     private final SerieRepository serieRepository;
     private final HistoryService historyService;
-
-    public SerieService(SerieRepository serieRepository) {
+    @Autowired
+    public SerieService(SerieRepository serieRepository, HistoryService historyService) {
         this.serieRepository = serieRepository;
+        this.historyService = historyService;
     }
 
     public Iterable<Series> getAllSeries() {
@@ -61,5 +63,8 @@ public class SerieService {
 
     public List<Series> getRecommendedSeries(String userId) {
         History history = historyService.getHistoryByUserId(userId);
+        return history.getResultats().stream()
+                .map(serieId -> serieRepository.findById(serieId).orElse(null))
+                .collect(Collectors.toList());
     }
 }
