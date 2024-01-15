@@ -1,4 +1,5 @@
 package com.example.mysearch.service;
+import com.example.mysearch.model.History;
 import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 @Service
 public class SerieService {
     private final SerieRepository serieRepository;
+    private final HistoryService historyService;
 
     public SerieService(SerieRepository serieRepository) {
         this.serieRepository = serieRepository;
@@ -55,5 +57,9 @@ public class SerieService {
             return serieRepository.findByTitre(name);
         }
         return serieRepository.findByTitre(name);
+    }
+
+    public List<Series> getRecommendedSeries(String userId) {
+        History history = historyService.getHistoryByUserId(userId);
     }
 }

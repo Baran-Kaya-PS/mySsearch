@@ -7,6 +7,8 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 @Data
 @Document(collection = "historique")
 public class History {
@@ -18,6 +20,7 @@ public class History {
     private List<String> recherche;
     private List<String> resultats;
     private String serieId;
+    private List<String> serieClick;
 
     public History() {
         this.date = new ArrayList<>();

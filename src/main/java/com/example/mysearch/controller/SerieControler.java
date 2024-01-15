@@ -69,6 +69,24 @@ public class SerieControler {
         }
         return "index";
     }
-
-
+    @GetMapping("/click")
+    public String handleSerieClick(@RequestParam String serieId, Principal principal) {
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+        if (user != null) {
+            historyService.addSerieClick(user.getId(), serieId);
+        }
+        return "serie"; // ou toute autre page appropriée
+    }
+    @GetMapping("/recommmendations")
+    public String showRecommendations(Model model, Principal principal) {
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+        if (user != null) {
+            String userId = user.getId();
+            List<Series> recommendedSeries = serieService.getRecommendedSeries(userId);
+            model.addAttribute("series", recommendedSeries);
+        }
+        return "index";
+    }
 }

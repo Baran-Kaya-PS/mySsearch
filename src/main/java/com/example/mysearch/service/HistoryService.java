@@ -5,9 +5,7 @@ import com.example.mysearch.repository.HistoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class HistoryService {
@@ -51,7 +49,7 @@ public class HistoryService {
     }
     // addSearchToHistory
     public History addSearchToHistory(String id, String search) {
-        History existingHistory = historyRepository.findById(id).orElse(null);
+        History existingHistory = historyRepository.findByUtilisateurId(id).orElse(null);
         if (existingHistory != null) {
             existingHistory.getRecherche().add(search);
             return historyRepository.save(existingHistory);
@@ -60,6 +58,23 @@ public class HistoryService {
         newHistory.setUtilisateurId(id);
         newHistory.getRecherche().add(search);
         return historyRepository.save(newHistory);
+    }
+    public History addSerieClick(String id, String serieName) {
+        Optional<History> historyOpt = historyRepository.findByUtilisateurId(id);
+        History history;
+        if (historyOpt.isPresent()) {
+            history = historyOpt.get();
+        } else {
+            history = new History();
+            history.setUtilisateurId(id);
+        }
+
+        if (history.getSerieClick() == null) {
+            history.setSerieClick(new ArrayList<>());
+        }
+
+        history.getSerieClick().add(serieName);
+        return historyRepository.save(history);
     }
 
 }
