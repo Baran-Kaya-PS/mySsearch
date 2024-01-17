@@ -65,8 +65,12 @@
         <iframe src="lien_video" frameborder="0" allowfullscreen></iframe>
     </div>
     <div class="text-center mt-3">
-        <h2>nom de la série</h2>
-        <p>Description de la série</p>
+        <h2 th:text="${serie.titre}">Nom de la série</h2>
+    </div>
+    <div>
+        <button id="like-button" class="btn btn-success" th:attr="data-serieid=${serieId}">Like</button>
+        <button id="dislike-button" class="btn btn-danger" th:attr="data-serieid=${serieId}">Dislike</button>
+
     </div>
 </div>
 
@@ -75,6 +79,41 @@
         <span class="text-muted">Emplacement du footer</span>
     </div>
 </footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const likeButton = document.getElementById('like-button');
+        const dislikeButton = document.getElementById('dislike-button');
+
+        likeButton.addEventListener('click', function() {
+            const serieId = likeButton.getAttribute('data-serieid');
+            fetch(`/api/serie/like?serieId=${serieId}`, { method: 'GET' })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Série likée avec succès');
+                        // Vous pouvez ici changer l'apparence du bouton pour indiquer que la série a été likée
+                    } else {
+                        console.error('Erreur lors du like de la série');
+                    }
+                })
+                .catch(error => console.error('Erreur:', error));
+        });
+
+        dislikeButton.addEventListener('click', function() {
+            const serieId = dislikeButton.getAttribute('data-serieid');
+            fetch(`/api/serie/dislike?serieId=${serieId}`, { method: 'GET' })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Série dislikée avec succès');
+                        // Vous pouvez ici changer l'apparence du bouton pour indiquer que la série a été dislikée
+                    } else {
+                        console.error('Erreur lors du dislike de la série');
+                    }
+                })
+                .catch(error => console.error('Erreur:', error));
+        });
+    });
+</script>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>

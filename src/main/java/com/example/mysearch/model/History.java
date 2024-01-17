@@ -21,6 +21,8 @@ public class History {
     private List<String> resultats;
     private String serieId;
     private List<String> serieClick;
+    private List<String> serieDislike;
+    private List<String> serieLike;
 
     public History() {
         this.date = new ArrayList<>();
@@ -34,6 +36,9 @@ public class History {
         this.date = date;
         this.recherche = recherche;
         this.resultats = resultats;
+        this.serieClick = new ArrayList<>();
+        this.serieDislike = new ArrayList<>();
+        this.serieLike = new ArrayList<>();
     }
 
     public String getId() {

@@ -80,4 +80,41 @@ public class HistoryService {
     public History getHistoryByUserId(String userId) {
         return historyRepository.findByUtilisateurId(userId).orElse(null);
     }
+
+    public void addSerieDislike(String userId, String serieId) {
+        History history = historyRepository.findByUtilisateurId(userId).orElse(null);
+        if (history == null) {
+            history = new History();
+            history.setUtilisateurId(userId);
+            history.setSerieDislike(new ArrayList<>());
+        }
+
+        if (history.getSerieDislike() == null) {
+            history.setSerieDislike(new ArrayList<>());
+        }
+
+        if (!history.getSerieDislike().contains(serieId)) {
+            history.getSerieDislike().add(serieId);
+            historyRepository.save(history);
+        }
+    }
+
+    public void addSerieLike(String userId, String serieId) {
+        History history = historyRepository.findByUtilisateurId(userId).orElse(null);
+        if (history == null) {
+            history = new History();
+            history.setUtilisateurId(userId);
+            history.setSerieLike(new ArrayList<>());
+        }
+
+        if (history.getSerieLike() == null) {
+            history.setSerieLike(new ArrayList<>());
+        }
+
+        if (!history.getSerieLike().contains(serieId)) {
+            history.getSerieLike().add(serieId);
+            historyRepository.save(history);
+        }
+    }
+
 }

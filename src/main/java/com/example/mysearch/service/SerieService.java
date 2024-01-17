@@ -4,13 +4,11 @@ import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 @Service
 public class SerieService {
     private final SerieRepository serieRepository;

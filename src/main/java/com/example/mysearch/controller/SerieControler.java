@@ -70,12 +70,14 @@ public class SerieControler {
         return "index";
     }
     @GetMapping("/click")
-    public String handleSerieClick(@RequestParam String serieId, Principal principal) {
+    public String handleSerieClick(@RequestParam String serieId, Principal principal,Model model) {
         String username = principal.getName();
         User user = userService.getUserByUsername(username);
         if (user != null) {
             historyService.addSerieClick(user.getId(), serieId);
         }
+        Series serie = serieService.getSerieById(serieId);
+        model.addAttribute("serie", serie);
         return "serie"; // ou toute autre page appropriée
     }
     @GetMapping("/recommmendations")
@@ -88,5 +90,28 @@ public class SerieControler {
             model.addAttribute("series", recommendedSeries);
         }
         return "index";
+    }
+    @GetMapping("/dislike")
+    public String handleDislike(@RequestParam String serieId, Principal principal) {
+        if (serieId == null || serieId.isEmpty()) {
+            return "redirect:/";
+        }
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+        if (user != null) {
+            String userId = user.getId();
+            historyService.addSerieDislike(userId, serieId);
+        }
+        return "/serie" + serieId;
+    }
+    @GetMapping("/like")
+    public String handleLike(@RequestParam String serieId, Principal principal) {
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+        if (user != null) {
+            String userId = user.getId();
+            historyService.addSerieLike(userId, serieId);
+        }
+        return "/serie" + serieId;
     }
 }
