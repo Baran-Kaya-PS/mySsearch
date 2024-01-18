@@ -95,8 +95,14 @@
         </select>
     </div>
     <div>
-        <button id="like-button" class="btn btn-success" th:attr="data-serieid=${serieId}">Like</button>
-        <button id="dislike-button" class="btn btn-danger" th:attr="data-serieid=${serieId}">Dislike</button>
+        <form th:action="@{/api/serie/like}" method="get">
+            <input type="hidden" name="serieName" th:value="${serie.titre}" />
+            <button type="submit" class="btn btn-success">Like</button>
+        </form>
+        <form th:action="@{/api/serie/dislike}" method="get">
+            <input type="hidden" name="serieName" th:value="${serie.titre}" />
+            <button type="submit" class="btn btn-success">Dislike</button>
+        </form>
     </div>
 </div>
 

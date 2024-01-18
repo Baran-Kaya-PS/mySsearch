@@ -74,6 +74,7 @@ public class SerieControler {
         String username = principal.getName();
         User user = userService.getUserByUsername(username);
         if (user != null) {
+            // si il a déjà cliqué sur cette série on ajoute +1 au nombre de clics de la série, <Serie, nbClicks>
             historyService.addSerieClick(user.getId(), serieId);
         }
         Series serie = serieService.getSerieById(serieId);
@@ -92,26 +93,31 @@ public class SerieControler {
         return "index";
     }
     @GetMapping("/dislike")
-    public String handleDislike(@RequestParam String serieId, Principal principal) {
-        if (serieId == null || serieId.isEmpty()) {
+    public String handleDislike(@RequestParam String serieName, Principal principal, Model model) {
+        if (serieName == null || serieName.isEmpty()) {
             return "redirect:/";
         }
         String username = principal.getName();
         User user = userService.getUserByUsername(username);
         if (user != null) {
             String userId = user.getId();
-            historyService.addSerieDislike(userId, serieId);
+            historyService.addSerieDislike(userId, serieName);
         }
-        return "/serie" + serieId;
+        Series serie = serieService.getSerieById(serieName);
+        model.addAttribute("serie", serie);
+        return "serie";
     }
+
     @GetMapping("/like")
-    public String handleLike(@RequestParam String serieId, Principal principal) {
+    public String handleLike(@RequestParam String serieName, Principal principal, Model model) {
         String username = principal.getName();
         User user = userService.getUserByUsername(username);
         if (user != null) {
             String userId = user.getId();
-            historyService.addSerieLike(userId, serieId);
+            historyService.addSerieLike(userId, serieName);
         }
-        return "/serie" + serieId;
+        Series serie = serieService.getSerieById(serieName);
+        model.addAttribute("serie", serie);
+        return "serie";
     }
 }

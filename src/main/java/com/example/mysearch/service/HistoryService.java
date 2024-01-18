@@ -99,7 +99,7 @@ public class HistoryService {
         }
     }
 
-    public void addSerieLike(String userId, String serieId) {
+    public void addSerieLike(String userId, String serieName) {
         History history = historyRepository.findByUtilisateurId(userId).orElse(null);
         if (history == null) {
             history = new History();
@@ -111,10 +111,22 @@ public class HistoryService {
             history.setSerieLike(new ArrayList<>());
         }
 
-        if (!history.getSerieLike().contains(serieId)) {
-            history.getSerieLike().add(serieId);
+        if (!history.getSerieLike().contains(serieName)) {
+            history.getSerieLike().add(serieName);
             historyRepository.save(history);
         }
     }
 
+    public boolean hasUserClickedOnSerie(String id, String serieId) {
+        History history = historyRepository.findByUtilisateurId(id).orElse(null);
+        if (history == null) {
+            return false;
+        }
+
+        if (history.getSerieClick() == null) {
+            return false;
+        }
+
+        return history.getSerieClick().contains(serieId);
+    }
 }
