@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,6 +35,12 @@
         .navbar {
             padding: 20px;
         }
+        .serie-info {
+            margin-top: 20px;
+        }
+        .serie-info img {
+            max-width: 200px;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -56,21 +62,41 @@
 </nav>
 
 <div class="container">
-    <form action="/search" method="get" class="search-bar d-flex justify-content-center">
-        <input type="text" name="keyword" class="form-control" placeholder="Recherchez une série">
-        <button type="submit" class="btn btn-outline-primary ml-2">Rechercher</button>
-    </form>
-
+    <div class="serie-info text-center mt-3">
+        <h2 th:text="${serie.titre}">Nom de la série</h2>
+        <img th:src="@{/image/{serieName}.jpg(serieName=${serie.titre})}" alt="Image de la série" class="img-fluid mt-3">
+    </div>
     <div class="video-container mt-5">
-        <iframe src="lien_video" frameborder="0" allowfullscreen></iframe>
+        <iframe th:src="@{/video/video.mp4}" frameborder="0" allowfullscreen></iframe>
     </div>
     <div class="text-center mt-3">
-        <h2 th:text="${serie.titre}">Nom de la série</h2>
+        <h4>Numéro de la série:</h4>
+        <select id="serie-number" class="form-control">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+    </div>
+    <div class="text-center mt-3">
+        <h4>Numéro de l'épisode:</h4>
+        <select id="episode-number" class="form-control">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
     </div>
     <div>
         <button id="like-button" class="btn btn-success" th:attr="data-serieid=${serieId}">Like</button>
         <button id="dislike-button" class="btn btn-danger" th:attr="data-serieid=${serieId}">Dislike</button>
-
     </div>
 </div>
 
@@ -79,41 +105,6 @@
         <span class="text-muted">Emplacement du footer</span>
     </div>
 </footer>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const likeButton = document.getElementById('like-button');
-        const dislikeButton = document.getElementById('dislike-button');
-
-        likeButton.addEventListener('click', function() {
-            const serieId = likeButton.getAttribute('data-serieid');
-            fetch(`/api/serie/like?serieId=${serieId}`, { method: 'GET' })
-                .then(response => {
-                    if (response.ok) {
-                        console.log('Série likée avec succès');
-                        // Vous pouvez ici changer l'apparence du bouton pour indiquer que la série a été likée
-                    } else {
-                        console.error('Erreur lors du like de la série');
-                    }
-                })
-                .catch(error => console.error('Erreur:', error));
-        });
-
-        dislikeButton.addEventListener('click', function() {
-            const serieId = dislikeButton.getAttribute('data-serieid');
-            fetch(`/api/serie/dislike?serieId=${serieId}`, { method: 'GET' })
-                .then(response => {
-                    if (response.ok) {
-                        console.log('Série dislikée avec succès');
-                        // Vous pouvez ici changer l'apparence du bouton pour indiquer que la série a été dislikée
-                    } else {
-                        console.error('Erreur lors du dislike de la série');
-                    }
-                })
-                .catch(error => console.error('Erreur:', error));
-        });
-    });
-</script>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>

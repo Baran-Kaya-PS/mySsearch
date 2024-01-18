@@ -45,7 +45,7 @@ public class SignupController {
         }
 
         signupService.enregistrer(user.getName(), user.getEmail(), user.getPassword());
-        modelAndView.setViewName("redirect:/login");
+        modelAndView.setViewName("/login");
         return modelAndView;
     }
 }

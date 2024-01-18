@@ -1,3 +1,5 @@
+package com.example.mysearch;
+
 import com.example.mysearch.model.History;
 import com.example.mysearch.repository.HistoryRepository;
 import org.junit.jupiter.api.Test;
@@ -10,7 +12,6 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import java.util.ArrayList;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
-package com.example.mysearch;
 
 @DataMongoTest
 public class HistoryTest {
@@ -38,6 +39,4 @@ public class HistoryTest {
         assertThat(savedHistory.getResultats()).contains("result1");
         assertThat(savedHistory.getSerieId()).isEqualTo("serie123");
     }
-}
-    
 }
