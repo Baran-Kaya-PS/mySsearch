@@ -23,11 +23,13 @@ public class TFIDFRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        /*
         List<String> searchTerms = asList("prison", "évader", "détenu");
         searchTerms = TFIDFCalculator.removeAccents(searchTerms);
         int topN = 10;
         List<Map<String, Object>> topSeries = calculator.findTopSeries(searchTerms, topN);
         // Affichage des résultats
         topSeries.forEach(entry -> System.out.println("Série : " + entry.get("title") + ", Score TF-IDF : " + entry.get("similarity")));
+         */
     }
 }

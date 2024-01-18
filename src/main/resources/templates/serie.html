@@ -95,13 +95,17 @@
         </select>
     </div>
     <div>
-        <form th:action="@{/api/serie/like}" method="get">
+        <form method="get">
             <input type="hidden" name="serieName" th:value="${serie.titre}" />
-            <button type="submit" class="btn btn-success">Like</button>
+            <button id="like-button" type="submit" class="btn btn-success">
+                <i class="fa fa-thumbs-up"></i>
+            </button>
         </form>
-        <form th:action="@{/api/serie/dislike}" method="get">
+        <form method="get">
             <input type="hidden" name="serieName" th:value="${serie.titre}" />
-            <button type="submit" class="btn btn-success">Dislike</button>
+            <button id="dislike-button" type="submit" class="btn btn-success">
+                <i class="fa fa-thumbs-down"></i>
+            </button>
         </form>
     </div>
 </div>
@@ -112,6 +116,23 @@
     </div>
 </footer>
 
+<script>
+    document.getElementById('like-button').addEventListener('click', function(event) {
+        event.preventDefault();
+        this.classList.add('btn-primary');
+        document.getElementById('dislike-button').classList.remove('btn-danger');
+        var serieName = document.querySelector('input[name="serieName"]').value;
+        fetch('/api/serie/like?serieName=' + serieName), {method:'GET'}
+    });
+
+    document.getElementById('dislike-button').addEventListener('click', function(event) {
+        event.preventDefault();
+        this.classList.add('btn-danger');
+        document.getElementById('like-button').classList.remove('btn-primary');
+        var serieName = document.querySelector('input[name="serieName"]').value;
+        fetch('/api/serie/dislike?serieName=' + serieName), {method:'GET'}
+    });
+</script>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>

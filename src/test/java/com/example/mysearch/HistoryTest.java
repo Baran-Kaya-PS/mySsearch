@@ -5,12 +5,8 @@ import com.example.mysearch.repository.HistoryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataMongoTest
@@ -24,10 +20,14 @@ public class HistoryTest {
         // Create a new history object
         History history = new History();
         history.setUtilisateurId("user123");
-        history.setDate(new ArrayList<>());
-        history.getRecherche().add("search1");
-        history.getResultats().add("result1");
-        history.setSerieId("serie123");
+
+        Map<String, Integer> searchCount = new HashMap<>();
+        searchCount.put("search1", 1);
+        history.setSearchCount(searchCount);
+
+        Map<String, Integer> clickCount = new HashMap<>();
+        clickCount.put("serie123", 1);
+        history.setClickCount(clickCount);
 
         // Save the history to the database
         History savedHistory = historyRepository.save(history);
@@ -35,8 +35,7 @@ public class HistoryTest {
         // Verify that the history is saved successfully
         assertThat(savedHistory.getId()).isNotNull();
         assertThat(savedHistory.getUtilisateurId()).isEqualTo("user123");
-        assertThat(savedHistory.getRecherche()).contains("search1");
-        assertThat(savedHistory.getResultats()).contains("result1");
-        assertThat(savedHistory.getSerieId()).isEqualTo("serie123");
+        assertThat(savedHistory.getSearchCount()).containsEntry("search1", 1);
+        assertThat(savedHistory.getClickCount()).containsEntry("serie123", 1);
     }
 }

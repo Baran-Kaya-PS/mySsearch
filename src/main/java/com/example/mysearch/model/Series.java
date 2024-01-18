@@ -21,6 +21,9 @@ public class Series {
     private Map<String, Double> vecteursTFIDF = new HashMap<>();
 
     private String imageName;
+    private int likes;
+    private int dislikes;
+    private int views;
 
     public Series() {
     }

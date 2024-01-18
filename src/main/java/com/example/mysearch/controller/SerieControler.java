@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.ui.Model;
+import javax.servlet.http.HttpServletRequest;
 
 import java.security.Principal;
 import java.util.List;
@@ -74,8 +75,8 @@ public class SerieControler {
         String username = principal.getName();
         User user = userService.getUserByUsername(username);
         if (user != null) {
-            // si il a déjà cliqué sur cette série on ajoute +1 au nombre de clics de la série, <Serie, nbClicks>
             historyService.addSerieClick(user.getId(), serieId);
+            serieService.incrementViewCount(serieId);
         }
         Series serie = serieService.getSerieById(serieId);
         model.addAttribute("serie", serie);
@@ -94,16 +95,15 @@ public class SerieControler {
     }
     @GetMapping("/dislike")
     public String handleDislike(@RequestParam String serieName, Principal principal, Model model) {
-        if (serieName == null || serieName.isEmpty()) {
-            return "redirect:/";
-        }
         String username = principal.getName();
         User user = userService.getUserByUsername(username);
         if (user != null) {
             String userId = user.getId();
             historyService.addSerieDislike(userId, serieName);
+            String serieId = serieService.getSerieByTitle(serieName).getId();
+            serieService.incrementDislikeCount(serieService.getSerieByTitle(serieName).getId());
         }
-        Series serie = serieService.getSerieById(serieName);
+        Series serie = serieService.getSerieByTitle(serieName);
         model.addAttribute("serie", serie);
         return "serie";
     }
@@ -115,9 +115,12 @@ public class SerieControler {
         if (user != null) {
             String userId = user.getId();
             historyService.addSerieLike(userId, serieName);
+
+            serieService.incrementLikeCount(serieService.getSerieByTitle(serieName).getId());
         }
-        Series serie = serieService.getSerieById(serieName);
+        Series serie = serieService.getSerieByTitle(serieName);
         model.addAttribute("serie", serie);
         return "serie";
     }
+
 }

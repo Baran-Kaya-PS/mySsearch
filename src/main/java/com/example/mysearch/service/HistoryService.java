@@ -3,118 +3,47 @@ package com.example.mysearch.service;
 import com.example.mysearch.model.History;
 import com.example.mysearch.repository.HistoryRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 
 @Service
 public class HistoryService {
     private final HistoryRepository historyRepository;
+
     public HistoryService(HistoryRepository historyRepository) {
         this.historyRepository = historyRepository;
     }
 
-    public List<History> getAllHistoryRecords() {
-        return historyRepository.findAll();
-    }
-
-    public History getHistoryRecordById(Long id) {
-        return historyRepository.findById(String.valueOf(id)).orElse(null);
-    }
-
-    public History createHistoryRecord(History history) {
-        return historyRepository.save(history);
-    }
-
-
-    public History updateHistoryRecord(Long id, History updatedHistory) {
-        History existingHistory = historyRepository.findById(String.valueOf(id)).orElse(null);
-        if (existingHistory != null) {
-            existingHistory.setDate(updatedHistory.getDate());
-            existingHistory.setRecherche(updatedHistory.getRecherche());
-            existingHistory.setResultats(updatedHistory.getResultats());
-            return historyRepository.save(existingHistory);
-
-        }
-        return null;
-    }
-
-    public boolean deleteHistoryRecord(Long id) {
-        History existingHistory = historyRepository.findById(String.valueOf(id)).orElse(null);
-        if (existingHistory != null) {
-            historyRepository.delete(existingHistory);
-            return true;
-        }
-        return false;
-    }
-    // addSearchToHistory
-    public History addSearchToHistory(String id, String search) {
-        History existingHistory = historyRepository.findByUtilisateurId(id).orElse(null);
-        if (existingHistory != null) {
-            existingHistory.getRecherche().add(search);
-            return historyRepository.save(existingHistory);
-        }
-        History newHistory = new History();
-        newHistory.setUtilisateurId(id);
-        newHistory.getRecherche().add(search);
-        return historyRepository.save(newHistory);
-    }
-    public History addSerieClick(String id, String serieName) {
-        Optional<History> historyOpt = historyRepository.findByUtilisateurId(id);
-        History history;
-        if (historyOpt.isPresent()) {
-            history = historyOpt.get();
-        } else {
-            history = new History();
-            history.setUtilisateurId(id);
-        }
-
-        if (history.getSerieClick() == null) {
-            history.setSerieClick(new ArrayList<>());
-        }
-
-        history.getSerieClick().add(serieName);
-        return historyRepository.save(history);
-    }
-
     public History getHistoryByUserId(String userId) {
-        return historyRepository.findByUtilisateurId(userId).orElse(null);
+        return historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
     }
 
-    public void addSerieDislike(String userId, String serieId) {
-        History history = historyRepository.findByUtilisateurId(userId).orElse(null);
-        if (history == null) {
-            history = new History();
-            history.setUtilisateurId(userId);
-            history.setSerieDislike(new ArrayList<>());
-        }
+    public void addSearchToHistory(String userId, String keyword) {
+        History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
+        history.getSearchCount().put(keyword, history.getSearchCount().getOrDefault(keyword, 0) + 1);
+        historyRepository.save(history);
+    }
 
-        if (history.getSerieDislike() == null) {
-            history.setSerieDislike(new ArrayList<>());
-        }
-
-        if (!history.getSerieDislike().contains(serieId)) {
-            history.getSerieDislike().add(serieId);
-            historyRepository.save(history);
-        }
+    public void addSerieClick(String userId, String serieId) {
+        History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
+        history.getClickCount().put(serieId, history.getClickCount().getOrDefault(serieId, 0) + 1);
+        historyRepository.save(history);
     }
 
     public void addSerieLike(String userId, String serieName) {
-        History history = historyRepository.findByUtilisateurId(userId).orElse(null);
-        if (history == null) {
-            history = new History();
-            history.setUtilisateurId(userId);
-            history.setSerieLike(new ArrayList<>());
-        }
-
-        if (history.getSerieLike() == null) {
-            history.setSerieLike(new ArrayList<>());
-        }
-
+        History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
         if (!history.getSerieLike().contains(serieName)) {
             history.getSerieLike().add(serieName);
-            historyRepository.save(history);
         }
+        historyRepository.save(history);
+    }
+
+    public void addSerieDislike(String userId, String serieName) {
+        History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
+        if (!history.getSerieDislike().contains(serieName)) {
+            history.getSerieDislike().add(serieName);
+        }
+        historyRepository.save(history);
     }
 
     public boolean hasUserClickedOnSerie(String id, String serieId) {
@@ -123,10 +52,31 @@ public class HistoryService {
             return false;
         }
 
-        if (history.getSerieClick() == null) {
-            return false;
-        }
+        return history.getClickCount().containsKey(serieId);
+    }
 
-        return history.getSerieClick().contains(serieId);
+    public List<History> getAllHistoryRecords() {
+        return historyRepository.findAll();
+    }
+
+    public History createHistoryRecord(History historyRecord) {
+        return historyRepository.save(historyRecord);
+    }
+
+    public History updateHistoryRecord(String id, History historyRecord) {
+        History historyToUpdate = historyRepository.findByUtilisateurId(id).orElse(null);
+        if (historyToUpdate != null) {
+            historyToUpdate.setUtilisateurId(historyRecord.getUtilisateurId());
+            historyToUpdate.setSearchCount(historyRecord.getSearchCount());
+            historyToUpdate.setClickCount(historyRecord.getClickCount());
+            historyToUpdate.setSerieLike(historyRecord.getSerieLike());
+            historyToUpdate.setSerieDislike(historyRecord.getSerieDislike());
+            return historyRepository.save(historyToUpdate);
+        }
+        return null;
+    }
+
+    public void deleteHistoryRecord(String id) {
+        historyRepository.deleteByUtilisateurId(id);
     }
 }
