@@ -1,10 +1,11 @@
 import os
 
 # Set the base path for the source code
-src_path = 'C:/Users/admin/projects/mySsearch/src'
+src_path = r'C:\Users\Baran\IdeaProjects\mySsearch\src'
 
 # Set the output file path where you want to save all the code
-output_path = 'C:/Users/admin/projects/mySsearch/all_code.txt'
+output_path = r'C:\Users\Baran\IdeaProjects\mySsearch\AllCode.txt'
+
 
 # Function to recursively collect code from files
 def collect_code(base_path, output_file):
