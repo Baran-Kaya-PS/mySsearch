@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -24,6 +25,7 @@ public class Series {
     private int likes;
     private int dislikes;
     private int views;
+    private Map<String, List<String>> similarSeriesCache = new HashMap<>();
 
     public Series() {
     }
@@ -40,6 +42,11 @@ public class Series {
                 "id='" + id + '\'' +
                 ", titre='" + titre + '\'' +
                 ", vecteursTFIDF=" + vecteursTFIDF +
+                ", imageName='" + imageName + '\'' +
+                ", likes=" + likes +
+                ", dislikes=" + dislikes +
+                ", views=" + views +
+                ", similarSeriesCache=" + similarSeriesCache +
                 '}';
     }
 }

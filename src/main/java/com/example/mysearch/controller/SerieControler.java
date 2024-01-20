@@ -13,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.ui.Model;
 import javax.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @Controller // Remplacer @RestController par @Controller car on retourne une vue HTML et non du JSON
 @RequestMapping("/api/serie")
@@ -24,6 +27,7 @@ public class SerieControler {
     private final UserService userService;
     private final TFIDFCalculator tfidfCalculator;
     private final HistoryService historyService;
+    private static final Logger logger = LoggerFactory.getLogger(SerieControler.class);
 
     public SerieControler(SerieService serieService, UserService userService, TFIDFCalculator tfidfCalculator, HistoryService historyService) {
         this.serieService = serieService;
@@ -82,17 +86,6 @@ public class SerieControler {
         model.addAttribute("serie", serie);
         return "serie"; // ou toute autre page appropriée
     }
-    @GetMapping("/recommmendations")
-    public String showRecommendations(Model model, Principal principal) {
-        String username = principal.getName();
-        User user = userService.getUserByUsername(username);
-        if (user != null) {
-            String userId = user.getId();
-            List<Series> recommendedSeries = serieService.getRecommendedSeries(userId);
-            model.addAttribute("series", recommendedSeries);
-        }
-        return "index";
-    }
     @GetMapping("/dislike")
     public String handleDislike(@RequestParam String serieName, Principal principal, Model model) {
         String username = principal.getName();
@@ -121,6 +114,16 @@ public class SerieControler {
         Series serie = serieService.getSerieByTitle(serieName);
         model.addAttribute("serie", serie);
         return "serie";
+    }
+    @GetMapping("/recommendations")
+    public String getRecommendations(Principal principal, Model model) {
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+        if (user != null) {
+            List<Map<Series, String>> recommendedSeries = serieService.recommendSeries(user.getId());
+            model.addAttribute("series", recommendedSeries);
+        }
+        return "recommandation";
     }
 
 }
