@@ -23,8 +23,8 @@ public class History {
     private Map<String, Integer> searchCount = new HashMap<>();
     private Map<String, Integer> clickCount = new HashMap<>();
     private String serieId;
-    private List<String> serieDislike;
-    private List<String> serieLike;
+    private List<String> serieDislike = new ArrayList<>();
+    private List<String> serieLike = new ArrayList<>();
     public History(String utilisateurId) {
         this.utilisateurId = utilisateurId;
     }

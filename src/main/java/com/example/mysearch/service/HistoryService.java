@@ -75,6 +75,14 @@ public class HistoryService {
         }
         return null;
     }
+    public List<String> getWatchedSeries(String id) {
+        History history = historyRepository.findByUtilisateurId(id).orElse(null);
+        if (history == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(history.getClickCount().keySet());
+    }
+
 
     public void deleteHistoryRecord(String id) {
         historyRepository.deleteByUtilisateurId(id);
