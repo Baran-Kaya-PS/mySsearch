@@ -49,10 +49,7 @@
     <div class="collapse navbar-collapse">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="nav-link" href="#">Accueil</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Recherche</a>
+                <a class="nav-link" href="/api/home">Accueil</a>
             </li>
         </ul>
         <ul class="navbar-nav ml-auto">
@@ -70,12 +67,15 @@
 
 <div class="container">
     <h2 class="text-center mt-5">Séries Recommandées Pour Vous</h2>
-    <div class="series-grid">
-        <div th:each="serie : ${recommendedSeries}" class="series-item">
-            <a th:href="@{/serie/detail(serieId=${serie.id})}">
-                <img th:src="@{/image/{serieName}.jpg(serieName=${serie.titre})}" alt="Image de la série" class="img-fluid">
-                <p th:text="${serie.titre}" class="mt-2">Nom de la série</p> <!-- Ajout de la fermeture de la balise <p> ici -->
-            </a>
+    <div class="row text-center mt-4">
+        <div th:each="map : ${series}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div th:each="entry : ${map}">
+                <a th:href="@{/api/serie/click(serieId=${entry.key.id})}">
+                    <img th:src="@{/image/{serieName}.jpg(serieName=${entry.key.titre})}" alt="Image de la série" class="img-fluid" style="width: 200px; height: 300px;">
+                    <p class="mt-2" th:text="${entry.key.titre}">Nom de la série</p>
+                    <p class="mt-2" th:text="${entry.value}">Raison de la recommandation</p>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -91,5 +91,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </div>
+
 </body>
 </html>
