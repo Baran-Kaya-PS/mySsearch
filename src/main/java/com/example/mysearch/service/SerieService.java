@@ -25,6 +25,15 @@ public class SerieService {
     private static final Logger logger = LoggerFactory.getLogger(SerieService.class);
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
     private final Map<String, List<String>> seriesCache = new ConcurrentHashMap<>();
+    // Cache pour les séries similaires
+    private final Map<String, List<Series>> similarSeriesCache = new ConcurrentHashMap<>();
+
+    // Cache pour les séries recommandées
+    private final Map<String, List<Series>> recommendationCache = new ConcurrentHashMap<>();
+
+    // Cache pour les similarités de séries
+    private final Map<Pair<Series, Series>, Double> seriesSimilaritiesCache = new ConcurrentHashMap<>();
+
     @Autowired
     public SerieService(SerieRepository serieRepository, SeriesSimilarityRepository seriesSimilarityRepository, HistoryService historyService, UserService userService) {
         this.serieRepository = serieRepository;
@@ -76,6 +85,21 @@ public class SerieService {
         return serieRepository.findByTitre(serieName).get(0);
     }
     public List<Series> getRecommendedSeries(String userId) {
+        // Vérifiez si les recommandations pour cet utilisateur sont déjà en cache
+        if (recommendationCache.containsKey(userId)) {
+            return recommendationCache.get(userId);
+        }
+
+        // Sinon, calculez les recommandations
+        List<Series> recommendedSeries = calculateRecommendedSeries(userId);
+
+        // Mettez les recommandations en cache pour une utilisation ultérieure
+        recommendationCache.put(userId, recommendedSeries);
+
+        return recommendedSeries;
+    }
+
+    private List<Series> calculateRecommendedSeries(String userId) {
         // Récupérer l'historique de l'utilisateur
         History userHistory = historyService.getHistoryByUserId(userId);
         if (userHistory == null) {
@@ -89,23 +113,23 @@ public class SerieService {
         List<User> allUsers = (List<User>) userService.getAllUsers();
 
         // Créer une liste pour stocker les séries recommandées
-        List<Series> recommendedSeries = new ArrayList<>();
+        List<Series> recommendedSeries = Collections.synchronizedList(new ArrayList<>());
 
-        // Parcourir tous les utilisateurs
-        for (User user : allUsers) {
+        // Parcourir tous les utilisateurs en parallèle
+        allUsers.parallelStream().forEach(user -> {
             // Ne pas comparer l'utilisateur avec lui-même
             if (!user.getId().equals(userId)) {
                 // Récupérer l'historique de l'autre utilisateur
                 History otherUserHistory = historyService.getHistoryByUserId(user.getId());
                 if (otherUserHistory == null) {
-                    continue;
+                    return;
                 }
 
                 // Récupérer les séries que l'autre utilisateur a aimées
                 List<String> otherUserLikes = otherUserHistory.getSerieLike();
 
                 // Parcourir les séries que l'autre utilisateur a aimées
-                for (String serieName : otherUserLikes) {
+                otherUserLikes.parallelStream().forEach(serieName -> {
                     // Si l'utilisateur n'a pas déjà aimé cette série et qu'il ne l'a pas déjà dislikée
                     if (!userLikes.contains(serieName) && !userHistory.getSerieDislike().contains(serieName)) {
                         // Ajouter la série à la liste des séries recommandées
@@ -114,9 +138,9 @@ public class SerieService {
                             recommendedSeries.add(serie);
                         }
                     }
-                }
+                });
             }
-        }
+        });
 
         // Trier les séries recommandées en fonction de leur score de recommandation
         recommendedSeries.sort((s1, s2) -> Double.compare(getRecommendationScore(s2), getRecommendationScore(s1)));
