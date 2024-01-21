@@ -111,18 +111,13 @@ public class SerieService {
         return serieRepository.findByTitre(name);
     }
     /**
-     * Cherche les séries par genre.
-     * @param genre   le genre de la série à rechercher
+     * Cherche les séries par nom.
+     * @param serieName   le nom de la série à rechercher
      * @return          la liste des séries correspondantes, triées par score décroissant
      */
     public Series getSerieByTitle(String serieName) {
         return serieRepository.findByTitre(serieName).get(0);
     }
-    /**
-     * Cherche les séries par genre.
-     * @param genre   le genre de la série à rechercher
-     * @return          la liste des séries correspondantes, triées par score décroissant
-     */
     public List<Series> getRecommendedSeries(String userId) {
         if (recommendationCache.containsKey(userId)) {
             return recommendationCache.get(userId);
@@ -134,7 +129,11 @@ public class SerieService {
 
         return recommendedSeries;
     }
-
+    /**
+     * Calcule les séries recommandées pour un utilisateur.
+     * @param userId   l'ID de l'utilisateur
+     * @return         la liste des séries recommandées
+     */
     public List<Series> calculateRecommendedSeries(String userId) {
         History userHistory = historyService.getHistoryByUserId(userId);
         if (userHistory == null) {
@@ -261,9 +260,7 @@ public class SerieService {
             seriesList.parallelStream().forEach(series2 -> {
                 if (!series1.equals(series2)) {
                     double similarity = cosineSimilarity(series1.getVecteursTFIDF(), series2.getVecteursTFIDF());
-                    // Stockez cette valeur de similarité pour une utilisation ultérieure
                     similarities.put(new Pair<>(series1, series2), similarity);
-                    // Stockez cette valeur de similarité dans la base de données
                     saveSimilarityToDatabase(series1, series2, similarity);
                 }
             });

@@ -52,16 +52,24 @@
                 <a class="nav-link" href="/api/home">Accueil</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/api/series">Séries</a>
+                <a class="nav-link" href="/api/serie/all">Séries</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/api/serie/recommendations">Recommandations</a>
             </li>
-            <li class="nav-item active">
-                <a class="nav-link" href="/api/history/user">Historique</a>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" th:text="${#authentication.name}">NomUtilisateur</a>
+            </li>
+            <li class="nav-item">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-danger">Déconnexion</button>
+                </form>
             </li>
         </ul>
     </div>
+
 </nav>
 
 <div class="container">
@@ -76,7 +84,7 @@
         <h2 class="mt-4">Clics :</h2>
         <div class="series-grid">
             <div th:each="click : ${history.clickCount}" class="series-item">
-                <a th:href="@{'/api/serie/' + ${click.key}}">
+                <a th:href="@{'/api/serie/click?serieId=' + ${click.key}}">ajout
                     <img th:src="@{'/image/' + ${seriesNames[click.key]} + '.jpg'}" alt="Image not found" onerror="this.onerror=null; this.src='/images/default.jpg';"/>
                     <p th:text="${seriesNames[click.key]} + ' : ' + ${click.value}"></p>
                 </a>

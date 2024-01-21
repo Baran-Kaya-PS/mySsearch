@@ -9,6 +9,7 @@ import com.example.mysearch.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -31,29 +32,41 @@ public class DatabaseInitializerRunner implements CommandLineRunner {
     private final HistoryRepository historyRepository;
     private final ObjectMapper objectMapper;
 
-    public DatabaseInitializerRunner(SerieRepository serieRepository, UserRepository userRepository, HistoryRepository historyRepository, ObjectMapper objectMapper) {
+    private final MongoTemplate mongoTemplate;
+
+    public DatabaseInitializerRunner(SerieRepository serieRepository, UserRepository userRepository, HistoryRepository historyRepository, ObjectMapper objectMapper, MongoTemplate mongoTemplate) {
         this.serieRepository = serieRepository;
         this.userRepository = userRepository;
         this.historyRepository = historyRepository;
         this.objectMapper = objectMapper;
+        this.mongoTemplate = mongoTemplate;
     }
 
     @Override
     public void run(String... args) throws Exception {
+        if (!mongoTemplate.collectionExists(Series.class)) {
+            mongoTemplate.createCollection(Series.class);
+        }
         if (serieRepository.count() == 0) {
-            InputStream seriesStream = new ClassPathResource("data/series.json").getInputStream();
+            InputStream seriesStream = new ClassPathResource("data/SAE.series.json").getInputStream();
             List<Series> seriesList = Arrays.asList(objectMapper.readValue(seriesStream, Series[].class));
             serieRepository.saveAll(seriesList);
         }
 
+        if (!mongoTemplate.collectionExists(User.class)) {
+            mongoTemplate.createCollection(User.class);
+        }
         if (userRepository.count() == 0) {
-            InputStream usersStream = new ClassPathResource("data/users.json").getInputStream();
+            InputStream usersStream = new ClassPathResource("data/SAE.users.json").getInputStream();
             List<User> userList = Arrays.asList(objectMapper.readValue(usersStream, User[].class));
             userRepository.saveAll(userList);
         }
 
+        if (!mongoTemplate.collectionExists(History.class)) {
+            mongoTemplate.createCollection(History.class);
+        }
         if (historyRepository.count() == 0) {
-            InputStream historyStream = new ClassPathResource("data/history.json").getInputStream();
+            InputStream historyStream = new ClassPathResource("data/SAE.historique.json").getInputStream();
             List<History> historyList = Arrays.asList(objectMapper.readValue(historyStream, History[].class));
             historyRepository.saveAll(historyList);
         }

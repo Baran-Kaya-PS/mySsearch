@@ -1,4 +1,4 @@
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\MySearchApplication.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\MySearchApplication.java
 
 package com.example.mysearch;
 
@@ -17,36 +17,7 @@ public class MySearchApplication {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\config\MySpringConfiguration.java
-
-package com.example.mysearch.config;
-
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-
-@Configuration
-@ComponentScan(basePackages = "com.example.mysearch")
-public class MySpringConfiguration {
-
-}
-
-
---------------------------------------------------------------------------------
-
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\config\SecurityConfiguration.java
-
-package com.example.mysearch.config;
-
-import java.util.Arrays;
-
-public class SecurityConfiguration {
-
-}
-
-
---------------------------------------------------------------------------------
-
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\AuthController.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\controller\AuthController.java
 
 package com.example.mysearch.controller;
 
@@ -74,21 +45,45 @@ import org.springframework.beans.factory.ObjectProvider;
 import java.net.BindException;
 import java.net.http.HttpRequest;
 
+/**
+ * Cette classe est le contrôleur pour l'authentification des utilisateurs.
+ * Elle gère les requêtes liées à l'authentification, la déconnexion et la suppression de compte.
+ */
 @Controller
 public class AuthController {
     private final ObjectProvider<AuthenticationManager> authenticationManagerProvider;
+
+    /**
+     * Construit un nouveau AuthController avec le fournisseur de gestionnaire d'authentification spécifié.
+     * 
+     * @param authenticationManagerProvider le fournisseur pour le gestionnaire d'authentification
+     */
     @Autowired
     public AuthController(ObjectProvider<AuthenticationManager> authenticationManagerProvider) {
         this.authenticationManagerProvider = authenticationManagerProvider;
     }
+
     @Autowired
     private UserService userService;
 
+    /**
+     * Retourne la page de connexion.
+     * 
+     * @return la page de connexion
+     */
     @GetMapping("/login")
     public String getLoginPage() {
         return "login";
     }
 
+    /**
+     * Gère la requête de connexion.
+     * 
+     * @param username le nom d'utilisateur
+     * @param password le mot de passe
+     * @param request  la requête HTTP servlet
+     * @return la page de redirection
+     */
     @PostMapping("/login")
     public String handleLogin(@RequestParam String username, @RequestParam String password, HttpServletRequest request) {
         try {
@@ -105,25 +100,51 @@ public class AuthController {
             return "/login";
         }
     }
+
+    /**
+     * Déconnecte l'utilisateur.
+     * 
+     * @param request        la requête HTTP servlet
+     * @param response       la réponse HTTP servlet
+     * @param authentication l'objet d'authentification
+     * @return un message de succès
+     */
     @GetMapping("/logout")
     @ResponseBody
     public String logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         if (authentication != null) {
             new SecurityContextLogoutHandler().logout(request, response, authentication);
         }
-        return "Logged out successfully.";
+        return "Déconnecté avec succès.";
     }
+
+    /**
+     * Supprime le compte utilisateur.
+     * 
+     * @param request        la requête HTTP servlet
+     * @param response       la réponse HTTP servlet
+     * @param authentication l'objet d'authentification
+     * @return un message de succès
+     */
     @GetMapping("/deleteAccount")
     @ResponseBody
     public String deleteAccount(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-        if (authentication != null){
+        if (authentication != null) {
             String username = authentication.getName();
             userService.removeUserFromDatabase(username);
         }
-        return "Account deleted successfully.";
+        return "Compte supprimé avec succès.";
     }
-    @ExceptionHandler(value = {BindException.class, MethodArgumentNotValidException.class})
+
+    /**
+     * Gère l'exception de liaison.
+     * 
+     * @param ex l'exception de liaison
+     * @return une réponse avec un message d'erreur
+     */
+    @ExceptionHandler(value = { BindException.class, MethodArgumentNotValidException.class })
     public ResponseEntity<String> handleBindException(BindException ex) {
+        // Gérer l'exception de liaison
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }
@@ -131,104 +152,130 @@ public class AuthController {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\EvaluationControler.java
-
-package com.example.mysearch.controller;
-
-import com.example.mysearch.model.Evaluation;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.example.mysearch.service.EvaluationService;
-@RestController
-@RequestMapping("/api/evaluation")
-
-public class EvaluationControler {
-    private final EvaluationService evaluationService;
-
-    public EvaluationControler(EvaluationService evaluationService) {
-        this.evaluationService = evaluationService;
-    }
-
-    @GetMapping("/all")
-    public ResponseEntity<Iterable<Evaluation>> getAllEvaluations() {
-        Iterable<Evaluation> evaluations = evaluationService.getAllEvaluations();
-        return ResponseEntity.ok(evaluations);
-    }
-    @GetMapping("/{id}")
-    public ResponseEntity<Evaluation> getEvaluationById(@PathVariable Long id) {
-        Evaluation evaluation = evaluationService.getEvaluationById(id);
-        return evaluation != null ? ResponseEntity.ok(evaluation): ResponseEntity.notFound().build();
-    }
-    @PostMapping("/create")
-    public ResponseEntity<Evaluation> createEvaluation(@Valid @RequestBody Evaluation evaluation) {
-        Evaluation savedEvaluation = evaluationService.createEvaluation(evaluation);
-        return new ResponseEntity<>(savedEvaluation, HttpStatus.CREATED);
-    }
-    @PutMapping("/{id}")
-    public ResponseEntity<Evaluation> updateEvaluation(@PathVariable Long id, @Valid @RequestBody Evaluation evaluation) {
-        Evaluation updatedEvaluation = evaluationService.updateEvaluation(id, evaluation);
-        return new ResponseEntity<>(updatedEvaluation, HttpStatus.OK);
-    }
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Evaluation> deleteEvaluation(@PathVariable Long id) {
-        evaluationService.deleteEvaluation(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-}
-
-
---------------------------------------------------------------------------------
-
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\HistoryControler.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\controller\HistoryControler.java
 
 package com.example.mysearch.controller;
 
 import com.example.mysearch.model.History;
+import com.example.mysearch.model.Series;
+import com.example.mysearch.model.User;
 import com.example.mysearch.service.HistoryService;
+import com.example.mysearch.service.SerieService;
+import com.example.mysearch.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-@RestController
+/**
+ * Contrôleur pour gérer les requêtes liées à l'historique.
+ */
+@Controller
 @RequestMapping("/api/history")
 public class HistoryControler {
     private final HistoryService historyService;
+    @Autowired
+    private UserService userService;
 
+    @Autowired
+    private SerieService serieService;
+    
+    /**
+     * Constructeur de la classe HistoryControler.
+     * @param historyService le service d'historique
+     */
     public HistoryControler(HistoryService historyService) {
         this.historyService = historyService;
     }
 
+    /**
+     * Récupère tous les enregistrements d'historique.
+     * @return la liste des enregistrements d'historique
+     */
     @GetMapping("/")
     public List<History> getAllHistoryRecords() {
         return historyService.getAllHistoryRecords();
     }
 
+    /**
+     * Récupère un enregistrement d'historique par son identifiant.
+     * @param id l'identifiant de l'enregistrement d'historique
+     * @return l'enregistrement d'historique correspondant à l'identifiant
+     */
     @GetMapping("/{id}")
     public History getHistoryRecordById(@PathVariable String id) {
         return historyService.getHistoryByUserId(id);
     }
 
+    /**
+     * Crée un nouvel enregistrement d'historique.
+     * @param historyRecord l'enregistrement d'historique à créer
+     * @return l'enregistrement d'historique créé
+     */
     @PostMapping("/")
     public History createHistoryRecord(@RequestBody History historyRecord) {
         return historyService.createHistoryRecord(historyRecord);
     }
 
+    /**
+     * Met à jour un enregistrement d'historique existant.
+     * @param id l'identifiant de l'enregistrement d'historique à mettre à jour
+     * @param historyRecord l'enregistrement d'historique mis à jour
+     * @return l'enregistrement d'historique mis à jour
+     */
     @PutMapping("/{id}")
     public History updateHistoryRecord(@PathVariable String id, @RequestBody History historyRecord) {
         return historyService.updateHistoryRecord(id, historyRecord);
     }
 
+    /**
+     * Supprime un enregistrement d'historique.
+     * @param id l'identifiant de l'enregistrement d'historique à supprimer
+     */
     @DeleteMapping("/{id}")
     public void deleteHistoryRecord(@PathVariable String id) {
         historyService.deleteHistoryRecord(id);
+    }
+
+    /**
+     * Récupère l'historique de l'utilisateur actuel.
+     * @param model le modèle pour la vue
+     * @return la vue "history"
+     */
+    @GetMapping("/user")
+    public String getCurrentUserHistory(Model model) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username;
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails)principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+
+        User user = userService.getUserByUsername(username);
+        String userId = user.getId();
+
+        History history = historyService.getUserHistory(userId);
+        Map<String, String> seriesNames = new HashMap<>();
+        for (String seriesId : history.getClickCount().keySet()) {
+            Series series = serieService.getSerieById(seriesId);
+            seriesNames.put(seriesId, series.getTitre());
+        }
+        model.addAttribute("history", history);
+        model.addAttribute("seriesNames", seriesNames);
+        return "history";
     }
 }
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\SerieControler.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\controller\SerieControler.java
 
 package com.example.mysearch.controller;
 
@@ -247,10 +294,17 @@ import org.springframework.ui.Model;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
 
 import java.security.Principal;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.StreamSupport;
 
+/**
+ * Contrôleur pour les séries.
+ */
 @Controller // Remplacer @RestController par @Controller car on retourne une vue HTML et non du JSON
 @RequestMapping("/api/serie")
 public class SerieControler {
@@ -260,28 +314,66 @@ public class SerieControler {
     private final HistoryService historyService;
     private static final Logger logger = LoggerFactory.getLogger(SerieControler.class);
 
+    /**
+     * Constructeur du contrôleur des séries.
+     * @param serieService Le service des séries.
+     * @param userService Le service des utilisateurs.
+     * @param tfidfCalculator Le calculateur TF-IDF.
+     * @param historyService Le service de l'historique.
+     */
     public SerieControler(SerieService serieService, UserService userService, TFIDFCalculator tfidfCalculator, HistoryService historyService) {
         this.serieService = serieService;
         this.userService = userService;
         this.tfidfCalculator = tfidfCalculator;
         this.historyService = historyService;
     }
+
+    /**
+     * Récupère toutes les séries.
+     * @return Les séries.
+     */
     public ResponseEntity<Iterable<Series>> getAllSeries() {
         Iterable<Series> series = serieService.getAllSeries();
         return ResponseEntity.ok(series);
     }
+
+    /**
+     * Récupère une série par son identifiant.
+     * @param serieId L'identifiant de la série.
+     * @return La série correspondante.
+     */
     public ResponseEntity<Series> getSerieById(String serieId) {
         Series serie = serieService.getSerieById(serieId);
         return serie != null ? ResponseEntity.ok(serie): ResponseEntity.notFound().build();
     }
+
+    /**
+     * Ajoute une série.
+     * @param serie La série à ajouter.
+     * @return La série ajoutée.
+     */
     public ResponseEntity<Series> addSerie(Series serie) {
         Series savedSerie = serieService.addSerie(serie);
         return ResponseEntity.ok(savedSerie);
     }
+
+    /**
+     * Supprime une série.
+     * @param serieId L'identifiant de la série à supprimer.
+     * @return La réponse de suppression.
+     */
     public ResponseEntity<Series> deleteSerie(String serieId) {
         serieService.deleteSerie(serieId);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Recherche des séries.
+     * @param keyword Le mot-clé de recherche.
+     * @param model Le modèle de la vue.
+     * @param principal Le principal.
+     * @return La vue index.
+     */
     @GetMapping("/search")
     public String search(@RequestParam(required = false) String keyword, Model model, Principal principal) {
         if (keyword != null && !keyword.isEmpty()) {
@@ -305,7 +397,14 @@ public class SerieControler {
         }
         return "index";
     }
-    @GetMapping("/click")
+    /**
+     * Gère le clic sur une série.
+     * @param serieId L'identifiant de la série.
+     * @param principal Le principal.
+     * @param model Le modèle de la vue.
+     * @return La vue de la série.
+     */
+@GetMapping("/click")
     public String handleSerieClick(@RequestParam String serieId, Principal principal,Model model) {
         String username = principal.getName();
         User user = userService.getUserByUsername(username);
@@ -314,9 +413,20 @@ public class SerieControler {
             serieService.incrementViewCount(serieId);
         }
         Series serie = serieService.getSerieById(serieId);
+        List<Series> similarSeries = serieService.getSimilarSeries(serieId).stream()
+                .limit(8)
+                .collect(Collectors.toList());
         model.addAttribute("serie", serie);
+        model.addAttribute("similarSeries", similarSeries);
         return "serie"; // ou toute autre page appropriée
     }
+    /**
+     * Gère le dislike d'une série.
+     * @param serieName Le nom de la série.
+     * @param principal Le principal.
+     * @param model Le modèle de la vue.
+     * @return La vue de la série.
+     */
     @GetMapping("/dislike")
     public String handleDislike(@RequestParam String serieName, Principal principal, Model model) {
         String username = principal.getName();
@@ -331,7 +441,13 @@ public class SerieControler {
         model.addAttribute("serie", serie);
         return "serie";
     }
-
+    /**
+     * Gère le like d'une série.
+     * @param serieName Le nom de la série.^
+     * @param principal Le principal.
+     * @param model Le modèle de la vue.
+     * @return La vue de la série.
+     */
     @GetMapping("/like")
     public String handleLike(@RequestParam String serieName, Principal principal, Model model) {
         String username = principal.getName();
@@ -346,22 +462,41 @@ public class SerieControler {
         model.addAttribute("serie", serie);
         return "serie";
     }
+    /**
+     * Gère la recommandation de séries.
+     * @param principal Le principal.
+     * @param model Le modèle de la vue.
+     * @return La vue de la recommandation.
+     */
     @GetMapping("/recommendations")
     public String getRecommendations(Principal principal, Model model) {
         String username = principal.getName();
         User user = userService.getUserByUsername(username);
         if (user != null) {
-            List<Series> recommendations = serieService.recommendSeries(user.getId());
-            model.addAttribute("series", recommendations);
+            List<Map<Series, String>> recommendedSeries = serieService.recommendSeries(user.getId());
+            model.addAttribute("series", recommendedSeries);
         }
         return "recommandation";
+    }
+    /**
+     * retourne la liste des séries.
+     * @param model Le modèle de la vue.
+     * @return La vue des séries.
+     */
+    @GetMapping("/all")
+    public String getAllSeries(Model model) {
+        List<Series> series = StreamSupport.stream(serieService.getAllSeries().spliterator(), false)
+                .sorted(Comparator.comparingInt(s -> ((Series) s).getLikes() + ((Series) s).getViews()/10 - ((Series) s).getDislikes()).reversed())
+                .collect(Collectors.toList());
+        model.addAttribute("series", series);
+        return "series";
     }
 
 }
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\SignupController.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\controller\SignupController.java
 
 package com.example.mysearch.controller;
 
@@ -381,23 +516,39 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.net.URI;
 
+/**
+ * Cette classe est le contrôleur responsable de la gestion des inscriptions des utilisateurs.
+ */
 @Controller
 public class SignupController {
     @Autowired
     private SignupService signupService;
 
+    /**
+     * Affiche le formulaire d'inscription.
+     *
+     * @return le nom de la page d'inscription
+     */
     @GetMapping("/inscription")
     public String inscriptionForm() {
         return "signup"; // retourne la page d'inscription
     }
 
+    /**
+     * Traite la soumission du formulaire d'inscription.
+     *
+     * @param user           l'utilisateur à inscrire
+     * @param bindingResult  le résultat de la validation des champs du formulaire
+     * @param response       la réponse HTTP
+     * @return le modèle et la vue correspondant à la redirection après l'inscription
+     */
     @PostMapping("/inscription")
     public ModelAndView inscriptionSubmit(@Valid User user, BindingResult bindingResult, HttpServletResponse response) {
         ModelAndView modelAndView = new ModelAndView();
 
         if (signupService.userExists(user.getName())) {
             bindingResult.rejectValue("name", "error.user", "Ce nom d'utilisateur existe déjà");
-            response.setStatus(HttpStatus.BAD_REQUEST.value()); // Set the HTTP status here.
+            response.setStatus(HttpStatus.BAD_REQUEST.value()); // Définit le statut HTTP ici.
             modelAndView.addObject("user", user);
             modelAndView.setViewName("signup");
             return modelAndView;
@@ -418,7 +569,7 @@ public class SignupController {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\UserControler.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\controller\UserControler.java
 
 package com.example.mysearch.controller;
 
@@ -429,6 +580,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.mysearch.service.UserService;
 
+/**
+ * Cette classe est le contrôleur pour les opérations liées aux utilisateurs.
+ */
 @RestController
 @RequestMapping("/api/user")
 public class UserControler {
@@ -437,26 +591,61 @@ public class UserControler {
     public UserControler(UserService userService) {
         this.userService = userService;
     }
+
+    /**
+     * Crée un nouvel utilisateur
+     * @param user L'utilisateur à créer.
+     * @return ResponseEntity contenant l'utilisateur créé et le code de statut HTTP 201 (Created).
+     */
     @PostMapping("/create")
     public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
         User savedUser = userService.createUser(user);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
+
+    /**
+     * Récupère un utilisateur par son identifiant.
+     *
+     * @param id L'identifiant de l'utilisateur.
+     * @return ResponseEntity contenant l'utilisateur récupéré et le code de statut HTTP 200 (OK) s'il existe,
+     *         sinon le code de statut HTTP 404 (Not Found).
+     */
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);
         return user != null ? ResponseEntity.ok(user): ResponseEntity.notFound().build();
     }
+
+    /**
+     * Récupère tous les utilisateurs.
+     *
+     * @return ResponseEntity contenant la liste des utilisateurs récupérés et le code de statut HTTP 200 (OK).
+     */
     @GetMapping("/all")
     public ResponseEntity<Iterable<User>> getAllUsers() {
         Iterable<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
+
+    /**
+     * Met à jour un utilisateur existant.
+     *
+     * @param id   L'identifiant de l'utilisateur à mettre à jour.
+     * @param user Les nouvelles informations de l'utilisateur.
+     * @return ResponseEntity contenant l'utilisateur mis à jour et le code de statut HTTP 200 (OK).
+     */
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody User user) {
         User updatedUser = userService.updateUser(id, user);
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
+
+    /**
+     * Supprime un utilisateur.
+     *
+     * @param id L'identifiant de l'utilisateur à supprimer.
+     * @return ResponseEntity avec le code de statut HTTP 204 (No Content).
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<User> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
@@ -467,25 +656,44 @@ public class UserControler {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\ViewController.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\controller\ViewController.java
 
 package com.example.mysearch.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+/**
+ * Contrôleur pour les vues de l'application.
+ */
 @Controller
 public class ViewController {
 
+    /**
+     * Renvoie la vue de la page d'accueil.
+     *
+     * @return le nom de la vue "index"
+     */
     @GetMapping("/api/home")
     public String home() {
         return "index";
     }
+
+    /**
+     * Renvoie la vue des recommandations.
+     *
+     * @return le nom de la vue "recommandation"
+     */
     @GetMapping("/api/recommendations")
     public String recommendations() {
         return "recommandation";
     }
 
+    /**
+     * Renvoie la vue des séries.
+     *
+     * @return le nom de la vue "serie"
+     */
     @GetMapping("/api/series")
     public String series() {
         return "serie";
@@ -494,7 +702,7 @@ public class ViewController {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\Evaluation.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\model\Evaluation.java
 
 package com.example.mysearch.model;
 import lombok.Data;
@@ -538,7 +746,7 @@ public class Evaluation {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\History.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\model\History.java
 
 package com.example.mysearch.model;
 
@@ -552,6 +760,9 @@ import lombok.Data;
 import java.util.*;
 
 
+/**
+ * Représente l'historique d'un utilisateur dans l'application de recherche.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -567,6 +778,12 @@ public class History {
     private String serieId;
     private List<String> serieDislike = new ArrayList<>();
     private List<String> serieLike = new ArrayList<>();
+
+    /**
+     * Constructeur de la classe History.
+     * 
+     * @param utilisateurId l'identifiant de l'utilisateur
+     */
     public History(String utilisateurId) {
         this.utilisateurId = utilisateurId;
     }
@@ -574,7 +791,7 @@ public class History {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\Series.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\model\Series.java
 
 package com.example.mysearch.model;
 
@@ -584,8 +801,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+/**
+ * Représente une série.
+ */
 @Data
 @Document(collection = "series")
 public class Series {
@@ -602,22 +823,43 @@ public class Series {
     private int likes;
     private int dislikes;
     private int views;
+    private Map<String, List<String>> similarSeriesCache = new HashMap<>();
 
+    /**
+     * Constructeur par défaut.
+     */
     public Series() {
     }
 
+    /**
+     * Constructeur avec paramètres.
+     *
+     * @param id             l'identifiant de la série
+     * @param titre          le titre de la série
+     * @param vecteursTFIDF  les vecteurs TF-IDF de la série
+     */
     public Series(String id, String titre, Map<String, Double> vecteursTFIDF) {
         this.id = id;
         this.titre = titre;
         this.vecteursTFIDF = vecteursTFIDF;
     }
 
+    /**
+     * Retourne une représentation sous forme de chaîne de caractères de la série.
+     *
+     * @return la représentation de la série
+     */
     @Override
     public String toString() {
         return "Serie{" +
                 "id='" + id + '\'' +
                 ", titre='" + titre + '\'' +
                 ", vecteursTFIDF=" + vecteursTFIDF +
+                ", imageName='" + imageName + '\'' +
+                ", likes=" + likes +
+                ", dislikes=" + dislikes +
+                ", views=" + views +
+                ", similarSeriesCache=" + similarSeriesCache +
                 '}';
     }
 }
@@ -625,7 +867,7 @@ public class Series {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\SeriesSimilarity.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\model\SeriesSimilarity.java
 
 package com.example.mysearch.model;
 
@@ -635,6 +877,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+/**
+ * Représente la similarité entre deux séries.
+ * Utilisée pour le calcul de similarité entre deux séries.
+ * Les séries les plus similaires par séries ont été stockées en cache dans la collection series.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -649,7 +896,7 @@ public class SeriesSimilarity {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\User.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\model\User.java
 
 package com.example.mysearch.model;
 
@@ -665,6 +912,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Représente un utilisateur dans le système.
+ */
 @Data
 @Document(collection = "users")
 public class User {
@@ -702,6 +952,11 @@ public class User {
         this.evaluations = evaluations;
     }
 
+    /**
+     * Ajoute une évaluation à l'utilisateur.
+     * Si la liste des évaluations est nulle, elle est initialisée.
+     * @param evaluation l'évaluation à ajouter
+     */
     public void addEvaluation(Evaluation evaluation) {
         if (this.evaluations == null) {
             this.evaluations = new HashMap<String, Boolean>();
@@ -712,21 +967,7 @@ public class User {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\EvaluationRepository.java
-
-package com.example.mysearch.repository;
-import com.example.mysearch.model.Evaluation;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import java.util.List;
-public interface EvaluationRepository extends MongoRepository<Evaluation, String>{
-    List<Evaluation> findByUtilisateurId(String utilisateurId);
-    List<Evaluation> findBySerieId(String serieId);
-}
-
-
---------------------------------------------------------------------------------
-
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\HistoryRepository.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\repository\HistoryRepository.java
 
 package com.example.mysearch.repository;
 
@@ -736,30 +977,70 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface HistoryRepository extends MongoRepository<History, String>{
+/**
+ * Cette interface représente le repository pour l'entité History.
+ * Elle étend l'interface MongoRepository pour bénéficier des fonctionnalités de base de MongoDB.
+ */
+public interface HistoryRepository extends MongoRepository<History, String> {
+
+    /**
+     * Recherche et renvoie un objet History en fonction de l'identifiant de l'utilisateur.
+     *
+     * @param utilisateurId l'identifiant de l'utilisateur
+     * @return un objet Optional contenant l'objet History correspondant, s'il existe
+     */
     Optional<History> findByUtilisateurId(String utilisateurId);
+
+    /**
+     * Recherche et renvoie une liste d'objets History en fonction de l'identifiant de la série.
+     *
+     * @param serieId l'identifiant de la série
+     * @return une liste d'objets History correspondant à la série
+     */
     List<History> findBySerieId(String serieId);
+
+    /**
+     * Supprime les objets History en fonction de l'identifiant de l'utilisateur.
+     *
+     * @param id l'identifiant de l'utilisateur
+     */
     void deleteByUtilisateurId(String id);
 }
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\SerieRepository.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\repository\SerieRepository.java
 
 package com.example.mysearch.repository;
 import com.example.mysearch.model.Series;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
+/**
+ * Cette interface représente le repository pour l'entité Serie.
+ * Elle étend l'interface MongoRepository pour bénéficier des fonctionnalités de base de MongoDB.
+ */
 public interface SerieRepository extends MongoRepository<Series, String>{
+    /**
+     * Recherche les séries par titre.
+     * 
+     * @param titre Le titre de la série à rechercher.
+     * @return Une liste des séries correspondantes au titre donné.
+     */
     List<Series> findByTitre(String titre);
 
+    /**
+     * Vérifie si une série existe avec le titre donné.
+     * 
+     * @param name Le titre de la série à vérifier.
+     * @return true si une série avec le titre donné existe, sinon false.
+     */
     boolean existsByTitre(String name);
 }
 
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\SeriesSimilarityRepository.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\repository\SeriesSimilarityRepository.java
 
 package com.example.mysearch.repository;
 
@@ -768,17 +1049,41 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
+/**
+ * Cette interface représente un référentiel pour la classe SeriesSimilarity.
+ * Elle hérite de l'interface MongoRepository pour effectuer des opérations CRUD sur la base de données MongoDB.
+ */
 public interface SeriesSimilarityRepository extends MongoRepository<SeriesSimilarity, String> {
+    /**
+     * Récupère une liste de SeriesSimilarity en fonction de l'identifiant de la série 1.
+     *
+     * @param seriesId l'identifiant de la série 1
+     * @return une liste de SeriesSimilarity correspondant à l'identifiant de la série 1
+     */
     List<SeriesSimilarity> findBySeries1Id(String seriesId);
+
+    /**
+     * Récupère une liste de SeriesSimilarity en fonction de l'identifiant de la série 2.
+     *
+     * @param seriesId l'identifiant de la série 2
+     * @return une liste de SeriesSimilarity correspondant à l'identifiant de la série 2
+     */
     List<SeriesSimilarity> findBySeries2Id(String seriesId);
 
-    List<SeriesSimilarity> findBySeries1IdOrSeries2Id(String seriesId, String seriesId1);
+    /**
+     * Récupère une liste de SeriesSimilarity en fonction de l'identifiant de la série 1 ou de la série 2.
+     *
+     * @param seriesId  l'identifiant de la série 1
+     * @param seriesId1 l'identifiant de la série 2
+     * @return une liste de SeriesSimilarity correspondant à l'identifiant de la série 1 ou de la série 2
+     */
+    List<SeriesSimilarity> findBySeries1IdOrSeries2Id(java.lang.String seriesId, java.lang.String seriesId1);
 }
 
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\UserRepository.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\repository\UserRepository.java
 
 package com.example.mysearch.repository;
 
@@ -788,31 +1093,76 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Interface représentant le référentiel des utilisateurs.
+ * Étend l'interface MongoRepository pour les opérations de base sur la base de données MongoDB.
+ * Étend également l'interface UserRepositoryCustom pour les opérations personnalisées.
+ */
 public interface UserRepository extends MongoRepository<User, String>, UserRepositoryCustom {
+    /**
+     * Recherche les utilisateurs par leur adresse e-mail.
+     *
+     * @param email l'adresse e-mail à rechercher
+     * @return la liste des utilisateurs correspondant à l'adresse e-mail
+     */
     List<User> findByEmail(String email);
-    Optional<User> findByName(String nom);
-    
-    Optional<User> findById (String id);
 
+    /**
+     * Recherche un utilisateur par son nom.
+     *
+     * @param nom le nom de l'utilisateur à rechercher
+     * @return l'utilisateur correspondant au nom, s'il existe
+     */
+    Optional<User> findByName(String nom);
+
+    /**
+     * Recherche un utilisateur par son identifiant.
+     *
+     * @param id l'identifiant de l'utilisateur à rechercher
+     * @return l'utilisateur correspondant à l'identifiant, s'il existe
+     */
+    Optional<User> findById(String id);
+
+    /**
+     * Vérifie si un utilisateur existe avec le nom donné.
+     *
+     * @param name le nom de l'utilisateur à vérifier
+     * @return true si un utilisateur avec le nom donné existe, sinon false
+     */
     boolean existsByName(String name);
 
+    /**
+     * Supprime un utilisateur par son nom.
+     *
+     * @param username le nom de l'utilisateur à supprimer
+     */
     void deleteByName(String username);
 }
 
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\UserRepositoryCustom.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\repository\UserRepositoryCustom.java
 
 package com.example.mysearch.repository;
 
+/**
+ * Cette interface représente un référentiel personnalisé pour les utilisateurs.
+ * Elle fournit des méthodes pour ajouter une recherche à l'historique d'un utilisateur.
+ */
 public interface UserRepositoryCustom {
+    /**
+     * Ajoute une recherche à l'historique d'un utilisateur.
+     *
+     * @param userId     l'identifiant de l'utilisateur
+     * @param searchTerm le terme de recherche à ajouter à l'historique
+     */
     void addSearchToHistory(String userId, String searchTerm);
 }
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\UserRepositoryImpl.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\repository\UserRepositoryImpl.java
 
 package com.example.mysearch.repository;
 
@@ -824,6 +1174,10 @@ import org.springframework.data.mongodb.core.query.Update;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+/**
+ * Implémentation de l'interface UserRepositoryCustom.
+ * Cette classe permet d'ajouter une recherche à l'historique d'un utilisateur.
+ */
 public class UserRepositoryImpl implements UserRepositoryCustom {
 
     @Autowired
@@ -843,7 +1197,144 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\DataCleanupRunner.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\runners\CacheSimilarSeriesRunner.java
+
+package com.example.mysearch.runners;
+
+import com.example.mysearch.service.SerieService;
+import com.example.mysearch.repository.SerieRepository;
+import com.example.mysearch.model.Series;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * Cette classe représente un exécuteur de cache pour les séries similaires.
+ * 
+ * Elle implémente l'interface CommandLineRunner et est annotée avec @Component pour être gérée par Spring.
+ * 
+ * Le constructeur de la classe prend en paramètre le service de gestion des séries (SerieService) et le repository des séries (SerieRepository).
+ * 
+ * Lorsque la méthode run est appelée, elle récupère toutes les séries à partir du repository et vérifie si le cache des séries similaires est vide.
+ * Si le cache est vide, elle utilise le service de gestion des séries pour mettre en cache les séries similaires.
+ * Sinon, elle ne fait rien.
+ */
+/**
+    * Constructeur de la classe CacheSimilarSeriesRunner.
+    * 
+    * @param serieService    le service de gestion des séries
+    * @param serieRepository le repository des séries
+    */
+@Component
+public class CacheSimilarSeriesRunner implements CommandLineRunner {
+    private final SerieService serieService;
+    private final SerieRepository serieRepository;
+    private final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CacheSimilarSeriesRunner.class);
+
+    public CacheSimilarSeriesRunner(SerieService serieService, SerieRepository serieRepository) {
+        this.serieService = serieService;
+        this.serieRepository = serieRepository;
+    }
+
+    @Override
+    public void run(String... args) {
+        /*
+        List<Series> allSeries = serieRepository.findAll();
+        for (Series series : allSeries) {
+            if (series.getSimilarSeriesCache().isEmpty()) {
+                serieService.cacheSimilarSeries(series.getId());
+            } else {
+                logger.info("Similar series already cached for series with id: " + series.getId());
+            }
+        }
+         */
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\runners\DatabaseInitializerRunner.java
+
+package com.example.mysearch.runners;
+
+import com.example.mysearch.model.History;
+import com.example.mysearch.model.Series;
+import com.example.mysearch.model.User;
+import com.example.mysearch.repository.HistoryRepository;
+import com.example.mysearch.repository.SerieRepository;
+import com.example.mysearch.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Component;
+
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+    * Initialiseur de base de données qui s'exécute au démarrage de l'application.
+    *
+    * @param serieRepository    le repository pour les séries
+    * @param userRepository    le repository pour les utilisateurs
+    * @param historyRepository  le repository pour l'historique
+    * @param objectMapper      l'objet ObjectMapper pour la désérialisation JSON
+    */
+@Component
+public class DatabaseInitializerRunner implements CommandLineRunner {
+
+    private final SerieRepository serieRepository;
+    private final UserRepository userRepository;
+    private final HistoryRepository historyRepository;
+    private final ObjectMapper objectMapper;
+
+    private final MongoTemplate mongoTemplate;
+
+    public DatabaseInitializerRunner(SerieRepository serieRepository, UserRepository userRepository, HistoryRepository historyRepository, ObjectMapper objectMapper, MongoTemplate mongoTemplate) {
+        this.serieRepository = serieRepository;
+        this.userRepository = userRepository;
+        this.historyRepository = historyRepository;
+        this.objectMapper = objectMapper;
+        this.mongoTemplate = mongoTemplate;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        if (!mongoTemplate.collectionExists(Series.class)) {
+            mongoTemplate.createCollection(Series.class);
+        }
+        if (serieRepository.count() == 0) {
+            InputStream seriesStream = new ClassPathResource("data/SAE.series.json").getInputStream();
+            List<Series> seriesList = Arrays.asList(objectMapper.readValue(seriesStream, Series[].class));
+            serieRepository.saveAll(seriesList);
+        }
+
+        if (!mongoTemplate.collectionExists(User.class)) {
+            mongoTemplate.createCollection(User.class);
+        }
+        if (userRepository.count() == 0) {
+            InputStream usersStream = new ClassPathResource("data/SAE.users.json").getInputStream();
+            List<User> userList = Arrays.asList(objectMapper.readValue(usersStream, User[].class));
+            userRepository.saveAll(userList);
+        }
+
+        if (!mongoTemplate.collectionExists(History.class)) {
+            mongoTemplate.createCollection(History.class);
+        }
+        if (historyRepository.count() == 0) {
+            InputStream historyStream = new ClassPathResource("data/SAE.historique.json").getInputStream();
+            List<History> historyList = Arrays.asList(objectMapper.readValue(historyStream, History[].class));
+            historyRepository.saveAll(historyList);
+        }
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\runners\DataCleanupRunner.java
 
 package com.example.mysearch.runners;
 
@@ -853,6 +1344,12 @@ import com.example.mysearch.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+/**
+ * Cette classe représente un exécuteur de nettoyage des données.
+ * Elle implémente l'interface CommandLineRunner et est annotée avec @Component et @Order(1).
+ * L'exécuteur de nettoyage des données est responsable de la suppression des données obsolètes ou inutiles.
+ * Il utilise les services UserService, HistoryService et SerieService pour effectuer les opérations de nettoyage.
+ */
 @Order(1)
 @Component
 public class DataCleanupRunner implements CommandLineRunner {
@@ -861,6 +1358,13 @@ public class DataCleanupRunner implements CommandLineRunner {
     private final HistoryService historyService;
     private final SerieService serieService;
 
+    /**
+     * Constructeur de la classe DataCleanupRunner.
+     *
+     * @param userService    Le service utilisateur.
+     * @param historyService Le service historique.
+     * @param serieService   Le service série.
+     */
     public DataCleanupRunner(UserService userService, HistoryService historyService, SerieService serieService) {
         this.userService = userService;
         this.historyService = historyService;
@@ -880,7 +1384,7 @@ public class DataCleanupRunner implements CommandLineRunner {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\DataGeneratorRunner.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\runners\DataGeneratorRunner.java
 
 package com.example.mysearch.runners;
 
@@ -897,6 +1401,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Cette classe est responsable de la génération de données pour les utilisateurs, les séries et l'historique.
+ * Elle implémente l'interface CommandLineRunner pour pouvoir être exécutée au démarrage de l'application.
+ * Les données générées comprennent des utilisateurs, des vues, des likes, des dislikes et des recherches aléatoires pour les séries.
+ * Les utilisateurs sont générés avec un nom, un email et un mot de passe.
+ * Les vues et les likes sont ajoutés à l'historique de l'utilisateur et le compteur de vues et de likes de la série est incrémenté.
+ * Les dislikes sont également ajoutés à l'historique de l'utilisateur, mais le compteur de dislikes de la série n'est pas incrémenté.
+ * Les mots-clés possibles pour les recherches sont : "action", "drama", "comedy", "thriller", "sci-fi", "romance", "horror", "adventure", "mystery" et "fantasy".
+ * Les utilisateurs, l'historique généré et les données des séries sont affichés dans la console.
+ */
 @Component
 @Order(2)
 public class DataGeneratorRunner implements CommandLineRunner {
@@ -920,7 +1434,7 @@ public class DataGeneratorRunner implements CommandLineRunner {
         List<String> keywords = Arrays.asList("action", "drama", "comedy", "thriller", "sci-fi", "romance", "horror", "adventure", "mystery", "fantasy");
 
         // Générer 1000 utilisateurs
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 1000; i < 1600; i++) {
             User user = new User();
             user.setName("user" + i);
             user.setEmail("user" + i + "@example.com");
@@ -953,12 +1467,13 @@ public class DataGeneratorRunner implements CommandLineRunner {
         }
 
          */
+
     }
 }
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\InitialiazeProject.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\runners\InitialiazeProject.java
 
 package com.example.mysearch.runners;
 
@@ -968,7 +1483,7 @@ public class InitialiazeProject {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\SimilarityRunner.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\runners\SimilarityRunner.java
 
 package com.example.mysearch.runners;
 
@@ -977,16 +1492,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+/**
+ * Cette classe est responsable de l'exécution du calcul des similarités entre les séries.
+ * Elle implémente l'interface CommandLineRunner de Spring Boot pour pouvoir être exécutée au démarrage de l'application.
+ */
 @Component
 public class SimilarityRunner implements CommandLineRunner {
 
     private final SerieService serieService;
 
+    /**
+     * Constructeur de la classe SimilarityRunner.
+     * 
+     * @param serieService le service responsable du calcul des similarités entre les séries
+     */
     @Autowired
     public SimilarityRunner(SerieService serieService) {
         this.serieService = serieService;
     }
 
+    /**
+     * Méthode exécutée au démarrage de l'application.
+     * Elle appelle la méthode calculateSeriesSimilarities du service SerieService pour calculer les similarités entre les séries.
+     * 
+     * @param args les arguments de la ligne de commande
+     * @throws Exception en cas d'erreur lors du calcul des similarités
+     */
     @Override
     public void run(String... args) throws Exception {
         serieService.calculateSeriesSimilarities();
@@ -995,7 +1526,7 @@ public class SimilarityRunner implements CommandLineRunner {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\TFIDFRunner.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\runners\TFIDFRunner.java
 
 package com.example.mysearch.runners;
 
@@ -1010,6 +1541,11 @@ import java.util.Map;
 
 import static java.util.Arrays.*;
 
+/**
+    * Constructeur de la classe TFIDFRunner.
+    * 
+    * @param calculator le calculateur TF-IDF utilisé pour trouver les séries les plus pertinentes
+    */
 @Component
 public class TFIDFRunner implements CommandLineRunner {
 
@@ -1036,7 +1572,7 @@ public class TFIDFRunner implements CommandLineRunner {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\security\PasswordEncoderConfig.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\security\PasswordEncoderConfig.java
 
 package com.example.mysearch.security;
 
@@ -1045,6 +1581,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Cette classe configure le bean PasswordEncoder utilisé pour encoder les mots de passe.
+ * Elle utilise l'algorithme BCrypt pour le hachage des mots de passe.
+ */
 @Configuration
 public class PasswordEncoderConfig {
     @Bean
@@ -1056,10 +1596,9 @@ public class PasswordEncoderConfig {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\security\SecurityConfig.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\security\SecurityConfig.java
 
 package com.example.mysearch.security;
-
 import com.example.mysearch.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -1076,9 +1615,23 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
+/**
+ * Cette classe représente la configuration de sécurité de l'application.
+ * Elle est responsable de la définition des règles de sécurité, de la gestion de l'authentification
+ * et de l'autorisation des requêtes HTTP.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    
+    /**
+     * Cette méthode configure le filtre de sécurité pour les requêtes HTTP.
+     * Elle définit les règles d'autorisation et de gestion de l'authentification.
+     * 
+     * @param http L'objet HttpSecurity utilisé pour configurer le filtre de sécurité.
+     * @return Le SecurityFilterChain configuré.
+     * @throws Exception Si une exception survient lors de la configuration.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // Désactiver CSRF ici
@@ -1086,7 +1639,7 @@ public class SecurityConfig {
                 //.csrf(csrf -> {
                 //    csrf.csrfTokenRepository(customCsrfTokenRepository());
                 //})
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // nous avons fais le choix de le désactiver car il nous posait des problèmes nottament lors de la connexion
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/inscription", "/login", "/recherche", "/compte","/","/api/serie/search","/image/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -1109,17 +1662,39 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Cette méthode retourne un objet CsrfTokenRepository personnalisé.
+     * Dans cet exemple, elle retourne un HttpSessionCsrfTokenRepository.
+     * 
+     * @return L'objet CsrfTokenRepository personnalisé.
+     */
     private CsrfTokenRepository customCsrfTokenRepository() {
         return new HttpSessionCsrfTokenRepository(); // Exemple avec HttpSessionCsrfTokenRepository
     }
 
+    /**
+     * Cette méthode retourne un objet AuthenticationManagerBean.
+     * 
+     * @param authenticationConfiguration L'objet AuthenticationConfiguration utilisé pour obtenir l'AuthenticationManager.
+     * @return L'objet AuthenticationManagerBean.
+     * @throws Exception Si une exception survient lors de la configuration.
+     */
     @Bean
     public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
+    /**
+     * Cette méthode configure l'AuthenticationManager pour l'authentification des utilisateurs.
+     * 
+     * @param auth L'objet AuthenticationManagerBuilder utilisé pour configurer l'AuthenticationManager.
+     * @param userService Le service UserService utilisé pour récupérer les informations des utilisateurs.
+     * @param passwordEncoder Le PasswordEncoder utilisé pour encoder les mots de passe.
+     * @throws Exception Si une exception survient lors de la configuration.
+     */
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth, UserService userService, PasswordEncoder passwordEncoder) throws Exception {
+        // Configuration de l'AuthenticationManager pour l'authentification des utilisateurs
         auth
                 .userDetailsService(userService)
                 .passwordEncoder(passwordEncoder);
@@ -1129,46 +1704,7 @@ public class SecurityConfig {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\EvaluationService.java
-
-package com.example.mysearch.service;
-import com.example.mysearch.model.Evaluation;
-import com.example.mysearch.repository.EvaluationRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-@Service
-public class EvaluationService {
-    private final EvaluationRepository evaluationRepository;
-
-    public EvaluationService(EvaluationRepository evaluationRepository) {
-        this.evaluationRepository = evaluationRepository;
-    }
-
-    public Iterable<Evaluation> getAllEvaluations() {
-        return evaluationRepository.findAll();
-    }
-
-    public Evaluation getEvaluationById(Long id) {
-        return evaluationRepository.findById(String.valueOf(id)).orElse(null);
-    }
-
-    public Evaluation createEvaluation(Evaluation evaluation) {
-        return evaluationRepository.save(evaluation);
-    }
-
-    public Evaluation updateEvaluation(Long id, Evaluation evaluation) {
-        return evaluationRepository.save(evaluation);
-    }
-
-    public void deleteEvaluation(Long id) {
-        evaluationRepository.deleteById(String.valueOf(id));
-    }
-}
-
-
---------------------------------------------------------------------------------
-
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\HistoryService.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\service\HistoryService.java
 
 package com.example.mysearch.service;
 
@@ -1178,30 +1714,62 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+/**
+ * Service de gestion de l'historique.
+ */
 @Service
 public class HistoryService {
     private final HistoryRepository historyRepository;
 
+    /**
+     * Constructeur de la classe HistoryService.
+     *
+     * @param historyRepository le repository d'historique
+     */
     public HistoryService(HistoryRepository historyRepository) {
         this.historyRepository = historyRepository;
     }
 
+    /**
+     * Récupère l'historique d'un utilisateur en fonction de son identifiant.
+     *
+     * @param userId l'identifiant de l'utilisateur
+     * @return l'historique de l'utilisateur, ou un nouvel historique si aucun n'est trouvé
+     */
     public History getHistoryByUserId(String userId) {
         return historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
     }
 
+    /**
+     * Ajoute une recherche à l'historique d'un utilisateur.
+     *
+     * @param userId  l'identifiant de l'utilisateur
+     * @param keyword le mot-clé de la recherche
+     */
     public void addSearchToHistory(String userId, String keyword) {
         History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
         history.getSearchCount().put(keyword, history.getSearchCount().getOrDefault(keyword, 0) + 1);
         historyRepository.save(history);
     }
 
+    /**
+     * Ajoute un clic sur une série à l'historique d'un utilisateur.
+     *
+     * @param userId   l'identifiant de l'utilisateur
+     * @param serieId  l'identifiant de la série
+     */
     public void addSerieClick(String userId, String serieId) {
         History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
         history.getClickCount().put(serieId, history.getClickCount().getOrDefault(serieId, 0) + 1);
         historyRepository.save(history);
     }
 
+    /**
+     * Ajoute une série aimée à l'historique d'un utilisateur.
+     *
+     * @param userId     l'identifiant de l'utilisateur
+     * @param serieName  le nom de la série
+     */
     public void addSerieLike(String userId, String serieName) {
         History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
         if (!history.getSerieLike().contains(serieName)) {
@@ -1210,6 +1778,12 @@ public class HistoryService {
         historyRepository.save(history);
     }
 
+    /**
+     * Ajoute une série détestée à l'historique d'un utilisateur.
+     *
+     * @param userId     l'identifiant de l'utilisateur
+     * @param serieName  le nom de la série
+     */
     public void addSerieDislike(String userId, String serieName) {
         History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
         if (!history.getSerieDislike().contains(serieName)) {
@@ -1218,6 +1792,13 @@ public class HistoryService {
         historyRepository.save(history);
     }
 
+    /**
+     * Vérifie si un utilisateur a cliqué sur une série.
+     *
+     * @param id       l'identifiant de l'utilisateur
+     * @param serieId  l'identifiant de la série
+     * @return true si l'utilisateur a cliqué sur la série, sinon false
+     */
     public boolean hasUserClickedOnSerie(String id, String serieId) {
         History history = historyRepository.findByUtilisateurId(id).orElse(null);
         if (history == null) {
@@ -1227,14 +1808,32 @@ public class HistoryService {
         return history.getClickCount().containsKey(serieId);
     }
 
+    /**
+     * Récupère tous les enregistrements d'historique.
+     *
+     * @return la liste des enregistrements d'historique
+     */
     public List<History> getAllHistoryRecords() {
         return historyRepository.findAll();
     }
 
+    /**
+     * Crée un nouvel enregistrement d'historique.
+     *
+     * @param historyRecord l'enregistrement d'historique à créer
+     * @return l'enregistrement d'historique créé
+     */
     public History createHistoryRecord(History historyRecord) {
         return historyRepository.save(historyRecord);
     }
 
+    /**
+     * Met à jour un enregistrement d'historique existant.
+     *
+     * @param id             l'identifiant de l'utilisateur
+     * @param historyRecord  l'enregistrement d'historique mis à jour
+     * @return l'enregistrement d'historique mis à jour, ou null si aucun enregistrement n'est trouvé
+     */
     public History updateHistoryRecord(String id, History historyRecord) {
         History historyToUpdate = historyRepository.findByUtilisateurId(id).orElse(null);
         if (historyToUpdate != null) {
@@ -1248,6 +1847,35 @@ public class HistoryService {
         return null;
     }
 
+    /**
+     * Récupère les séries regardées par un utilisateur.
+     *
+     * @param id l'identifiant de l'utilisateur
+     * @return la liste des séries regardées par l'utilisateur
+     */
+    public List<String> getWatchedSeries(String id) {
+        History history = historyRepository.findByUtilisateurId(id).orElse(null);
+        if (history == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(history.getClickCount().keySet());
+    }
+
+    /**
+     * Récupère l'historique d'un utilisateur.
+     *
+     * @param id l'identifiant de l'utilisateur
+     * @return l'historique de l'utilisateur, ou null si aucun historique n'est trouvé
+     */
+    public History getUserHistory(String id) {
+        return historyRepository.findByUtilisateurId(id).orElse(null);
+    }
+
+    /**
+     * Supprime un enregistrement d'historique.
+     *
+     * @param id l'identifiant de l'utilisateur
+     */
     public void deleteHistoryRecord(String id) {
         historyRepository.deleteByUtilisateurId(id);
     }
@@ -1255,7 +1883,7 @@ public class HistoryService {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\SearchService.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\service\SearchService.java
 
 package com.example.mysearch.service;
 
@@ -1269,17 +1897,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Service de recherche pour les séries.
+ */
 @Service
 public class SearchService {
     private final SerieRepository serieRepository;
     private final TFIDFCalculator tfidfCalculator;
 
+    /**
+     * Constructeur du service de recherche.
+     *
+     * @param serieRepository   le repository des séries
+     * @param tfidfCalculator   le calculateur TF-IDF
+     */
     @Autowired
     public SearchService(SerieRepository serieRepository, TFIDFCalculator tfidfCalculator) {
         this.serieRepository = serieRepository;
         this.tfidfCalculator = tfidfCalculator;
     }
 
+    /**
+     * Recherche les séries par mot-clé.
+     *
+     * @param keyword   le mot-clé de recherche
+     * @return          la liste des séries correspondantes, triées par score décroissant
+     */
     public List<Series> searchSeriesByKeyword(String keyword) {
         List<Series> allSeries = serieRepository.findAll();
         return allSeries.stream()
@@ -1300,7 +1943,7 @@ public class SearchService {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\SerieService.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\service\SerieService.java
 
 package com.example.mysearch.service;
 import com.example.mysearch.model.History;
@@ -1318,7 +1961,13 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+/**
+ * Service de gestion des séries.
+ * Ce service permet de gérer les opérations liées aux séries telles que la recherche, l'ajout, la suppression, etc.
+ * Il fournit également des fonctionnalités de recommandation de séries basées sur l'historique de l'utilisateur.
+ */
 @Service
 public class SerieService {
     private final SerieRepository serieRepository;
@@ -1327,46 +1976,80 @@ public class SerieService {
     private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(SerieService.class);
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
-    @Autowired
+    private final Map<String, List<String>> seriesCache = new ConcurrentHashMap<>();
+    // Cache pour les séries similaires
+    private final Map<String, List<Series>> similarSeriesCache = new ConcurrentHashMap<>();
+
+    // Cache pour les séries recommandées
+    private final Map<String, List<Series>> recommendationCache = new ConcurrentHashMap<>();
+
+    // Cache pour les similarités de séries
+    private final Map<Pair<Series, Series>, Double> seriesSimilaritiesCache = new ConcurrentHashMap<>();
+
+    /**
+     * Constructeur du service de gestion des séries.
+     */
+    @Autowired // signifie que Spring va automatiquement injecter les dépendances nécessaires à ce service
     public SerieService(SerieRepository serieRepository, SeriesSimilarityRepository seriesSimilarityRepository, HistoryService historyService, UserService userService) {
         this.serieRepository = serieRepository;
         this.seriesSimilarityRepository = seriesSimilarityRepository;
         this.historyService = historyService;
         this.userService = userService;
     }
-
+    /**
+     * Récupère toutes les séries.
+     * @return  la liste de toutes les séries
+     */
     public Iterable<Series> getAllSeries() {
         return serieRepository.findAll();
     }
-
+    /**
+     * Récupère une série par son ID.
+     * @param serieId   l'ID de la série à récupérer
+     */
     public Series getSerieById(String serieId) {
         return serieRepository.findById(serieId).orElse(null);
     }
-
+    /**
+     * Ajoute une série.
+     * @param serie la série à ajouter
+     */
     public Series addSerie(Series serie) {
         return serieRepository.save(serie);
     }
-
+    /**
+     * Met à jour une série.
+     * @param serieId   l'ID de la série à mettre à jour
+     */
     public void deleteSerie(String serieId) {
         serieRepository.deleteById(serieId);
     }
+    /**
+     * Cherche les séries par mot-clé.
+     * @param keyword   le mot-clé de recherche
+     * @return          la liste des séries correspondantes, triées par score décroissant
+     */
     public Iterable<Series> searchSeriesByKeyword(String keyword) {
-        String[] keywords = keyword.split("\\s+"); // Divisez la chaîne en mots clés
+        String[] keywords = keyword.split("\\s+");
         List<Series> allSeries = serieRepository.findAll();
 
-        // Calcul des scores TFIDF pour chaque série basé sur tous les mots clés
-        return allSeries.stream() // Pour chaque série
-                .map(serie -> new AbstractMap.SimpleEntry<>( // série deviens une entrée de la map
-                        serie, // clé = série
+        return allSeries.stream()
+                .map(serie -> new AbstractMap.SimpleEntry<>(
+                        serie,
                         Arrays.stream(keywords) // flux de mots clés
-                                .mapToDouble(key -> serie.getVecteursTFIDF().getOrDefault(key.toLowerCase(), 0.0)) // pour chaque mot clé, récupérez le score TFIDF de la série
+                                .mapToDouble(key -> serie.getVecteursTFIDF().getOrDefault(key.toLowerCase(), 0.0))
                                 .sum() // somme des scores TFIDF
                 ))
-                .filter(entry -> entry.getValue() > 0) // Filtrez les séries avec un score > 0
+                .filter(entry -> entry.getValue() > 0)
                 .sorted(Map.Entry.<Series, Double>comparingByValue().reversed())
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
+    /**
+     * Cherche les séries par nom.
+     * @param name   le nom de la série à rechercher
+     * @return          la liste des séries correspondantes, triées par score décroissant
+     */
     public Iterable<Series> searchSeriesByName(String name) {
         // si le nom est dans la base de données on retourne la série
         if (serieRepository.existsByTitre(name)) {
@@ -1374,40 +2057,55 @@ public class SerieService {
         }
         return serieRepository.findByTitre(name);
     }
+    /**
+     * Cherche les séries par nom.
+     * @param serieName   le nom de la série à rechercher
+     * @return          la liste des séries correspondantes, triées par score décroissant
+     */
     public Series getSerieByTitle(String serieName) {
         return serieRepository.findByTitre(serieName).get(0);
     }
     public List<Series> getRecommendedSeries(String userId) {
-        // Récupérer l'historique de l'utilisateur
+        if (recommendationCache.containsKey(userId)) {
+            return recommendationCache.get(userId);
+        }
+
+        List<Series> recommendedSeries = calculateRecommendedSeries(userId);
+
+        recommendationCache.put(userId, recommendedSeries);
+
+        return recommendedSeries;
+    }
+    /**
+     * Calcule les séries recommandées pour un utilisateur.
+     * @param userId   l'ID de l'utilisateur
+     * @return         la liste des séries recommandées
+     */
+    public List<Series> calculateRecommendedSeries(String userId) {
         History userHistory = historyService.getHistoryByUserId(userId);
         if (userHistory == null) {
             return Collections.emptyList();
         }
 
-        // Récupérer les séries que l'utilisateur a aimées
         List<String> userLikes = userHistory.getSerieLike();
 
-        // Récupérer tous les utilisateurs
         List<User> allUsers = (List<User>) userService.getAllUsers();
 
-        // Créer une liste pour stocker les séries recommandées
-        List<Series> recommendedSeries = new ArrayList<>();
+        List<Series> recommendedSeries = Collections.synchronizedList(new ArrayList<>());
 
-        // Parcourir tous les utilisateurs
-        for (User user : allUsers) {
-            // Ne pas comparer l'utilisateur avec lui-même
+        allUsers.parallelStream().forEach(user -> {
             if (!user.getId().equals(userId)) {
                 // Récupérer l'historique de l'autre utilisateur
                 History otherUserHistory = historyService.getHistoryByUserId(user.getId());
                 if (otherUserHistory == null) {
-                    continue;
+                    return;
                 }
 
                 // Récupérer les séries que l'autre utilisateur a aimées
                 List<String> otherUserLikes = otherUserHistory.getSerieLike();
 
                 // Parcourir les séries que l'autre utilisateur a aimées
-                for (String serieName : otherUserLikes) {
+                otherUserLikes.parallelStream().forEach(serieName -> {
                     // Si l'utilisateur n'a pas déjà aimé cette série et qu'il ne l'a pas déjà dislikée
                     if (!userLikes.contains(serieName) && !userHistory.getSerieDislike().contains(serieName)) {
                         // Ajouter la série à la liste des séries recommandées
@@ -1416,9 +2114,9 @@ public class SerieService {
                             recommendedSeries.add(serie);
                         }
                     }
-                }
+                });
             }
-        }
+        });
 
         // Trier les séries recommandées en fonction de leur score de recommandation
         recommendedSeries.sort((s1, s2) -> Double.compare(getRecommendationScore(s2), getRecommendationScore(s1)));
@@ -1428,17 +2126,21 @@ public class SerieService {
     }
 
     private double getRecommendationScore(Series series) {
-        // Calculer le score de recommandation en fonction du nombre de "likes" et de "dislikes"
+        // Prendre en compte le nombre de vues, les likes et les dislikes
+        double viewScore = series.getViews();
         double likeScore = series.getLikes();
         double dislikeScore = series.getDislikes();
-
-        // Vous pouvez ajuster ces poids en fonction de l'importance que vous accordez aux "likes" et aux "dislikes"
-        double likeWeight = 1.0;
-        double dislikeWeight = -0.5;
-
-        return likeScore * likeWeight + dislikeScore * dislikeWeight;
+        double viewWeight = 0.05;
+        double likeWeight = 0.1;
+        double dislikeWeight = -0.08;
+        // les poids sont léger pour éviter de fausser les résultats
+        return viewScore * viewWeight + likeScore * likeWeight + dislikeScore * dislikeWeight;
     }
-
+    /**
+     * Incrémente le nombre de likes d'une série.
+     * @param serieId   l'ID de la série
+     * @return          la série mise à jour
+     */
     public void incrementLikeCount(String serieId) {
         Series serie = getSerieById(serieId);
         if (serie != null) {
@@ -1446,7 +2148,11 @@ public class SerieService {
             serieRepository.save(serie);
         }
     }
-
+    /**
+     * Incrémente le nombre de dislikes d'une série.
+     * @param serieId   l'ID de la série
+     * @return          la série mise à jour
+     */
     public void incrementDislikeCount(String serieId) {
         Series serie = getSerieById(serieId);
         if (serie != null) {
@@ -1454,6 +2160,11 @@ public class SerieService {
             serieRepository.save(serie);
         }
     }
+    /**
+     * Incrémente le nombre de vues d'une série.
+     * @param serieId   l'ID de la série
+     * @return          la série mise à jour
+     */
     public void incrementViewCount(String serieId) {
         Series serie = getSerieById(serieId);
         if (serie != null) {
@@ -1461,6 +2172,11 @@ public class SerieService {
             serieRepository.save(serie);
         }
     }
+    /**
+     * Calcule les similarités entre les séries.
+     * Cette méthode calcule les similarités entre les séries et les stocke dans la base de données.
+     * Fonction utilisé pour calculer les similarités entre les séries.
+     */
     public double cosineSimilarity(Map<String, Double> vectorA, Map<String, Double> vectorB) {
         double dotProduct = 0.0;
         double normA = 0.0;
@@ -1474,6 +2190,12 @@ public class SerieService {
         }
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
+    /**
+     * Calcule les similarités entre les séries.
+     * Cette méthode calcule les similarités entre les séries et les stocke dans la base de données.
+     * Fonction utilisé dans le projet.
+     * Elle récupère les vecteurs TF-IDF de chaque série et calcule la similarité cosinus entre chaque paire de séries.
+     */
     public void calculateSeriesSimilarities() {
         if (seriesSimilarityRepository.count() > 0) {
             return;
@@ -1481,21 +2203,23 @@ public class SerieService {
         List<Series> seriesList = serieRepository.findAll();
         Map<Pair<Series, Series>, Double> similarities = new ConcurrentHashMap<>();
 
-        for (int i = 0; i < seriesList.size(); i++) {
-            for (int j = i + 1; j < seriesList.size(); j++) {
-                int finalI = i;
-                int finalJ = j;
-                executorService.submit(() -> {
-                    double similarity = cosineSimilarity(seriesList.get(finalI).getVecteursTFIDF(), seriesList.get(finalJ).getVecteursTFIDF());
-                    // Stockez cette valeur de similarité pour une utilisation ultérieure
-                    similarities.put(new Pair<>(seriesList.get(finalI), seriesList.get(finalJ)), similarity);
-                    // Stockez cette valeur de similarité dans la base de données
-                    saveSimilarityToDatabase(seriesList.get(finalI), seriesList.get(finalJ), similarity);
-                });
-            }
-        }
+        seriesList.parallelStream().forEach(series1 -> {
+            seriesList.parallelStream().forEach(series2 -> {
+                if (!series1.equals(series2)) {
+                    double similarity = cosineSimilarity(series1.getVecteursTFIDF(), series2.getVecteursTFIDF());
+                    similarities.put(new Pair<>(series1, series2), similarity);
+                    saveSimilarityToDatabase(series1, series2, similarity);
+                }
+            });
+        });
     }
-
+    /**
+     * Enregistre la similarité entre deux séries dans la base de données.
+     * @param series1       la première série
+     * @param series2       la deuxième série
+     * @param similarity    la similarité entre les deux séries
+     * @return              la similarité enregistrée
+     */
     public void saveSimilarityToDatabase(Series series1, Series series2, double similarity) {
         SeriesSimilarity seriesSimilarity = new SeriesSimilarity();
         seriesSimilarity.setSeries1Id(series1.getId());
@@ -1504,115 +2228,174 @@ public class SerieService {
         seriesSimilarityRepository.save(seriesSimilarity);
     }
     public List<Series> getSimilarSeries(String seriesId) {
-        logger.info("Entrée dans getSimilarSeries avec seriesId: {}", seriesId);
-        try {
-            Series series = serieRepository.findById(seriesId).orElse(null);
-            if (series == null) {
-                logger.error("Series avec id {} non trouvée", seriesId);
-                return Collections.emptyList();
-            }
-            logger.info("Series avec id {} trouvée", seriesId);
+        // Récupérer la série par son ID
+        Series series = serieRepository.findById(seriesId).orElse(null);
 
-            List<SeriesSimilarity> seriesSimilarities = seriesSimilarityRepository.findBySeries1IdOrSeries2Id(seriesId, seriesId);
-            if (seriesSimilarities.isEmpty()) {
-                logger.info("Aucune similarité trouvée pour seriesId: {}", seriesId);
-            } else {
-                logger.info("Nombre de similarités trouvées: {}", seriesSimilarities.size());
-            }
-
-            List<Series> similarSeriesList = new ArrayList<>();
-            for (SeriesSimilarity seriesSimilarity : seriesSimilarities) {
-                String similarSeriesId = seriesSimilarity.getSeries1Id().equals(seriesId) ? seriesSimilarity.getSeries2Id() : seriesSimilarity.getSeries1Id();
-                logger.debug("Traitement de la série similaire avec id: {}", similarSeriesId);
-                Series similarSeries = serieRepository.findById(similarSeriesId).orElse(null);
-                if (similarSeries != null) {
-                    similarSeriesList.add(similarSeries);
-                }
-            }
-
-            if (similarSeriesList.isEmpty()) {
-                logger.info("Aucune série similaire trouvée pour seriesId: {}", seriesId);
-            } else {
-                logger.info("Séries similaires trouvées pour seriesId {}: {}", seriesId, similarSeriesList);
-            }
-
-            return similarSeriesList;
-        } catch (Exception e) {
-            logger.error("Erreur dans getSimilarSeries: ", e);
+        // Vérifier si la série existe
+        if (series == null) {
+            logger.error("Series avec id " + seriesId + " non trouvée");
             return Collections.emptyList();
         }
-    }
 
+        // Récupérer les séries similaires depuis le cache
+        List<String> similarSeriesIds = series.getSimilarSeriesCache().get(seriesId);
 
-    private double calculateSimilarity(Series series1, Series series2) {
-        System.out.println("Début de calculateSeriesSimilarities");
-        Map<String, Double> vector1 = series1.getVecteursTFIDF();
-        Map<String, Double> vector2 = series2.getVecteursTFIDF();
-
-        double dotProduct = 0.0;
-        double normA = 0.0;
-        double normB = 0.0;
-
-        for (String key : vector1.keySet()) {
-            dotProduct += vector1.get(key) * vector2.getOrDefault(key, 0.0);
-            normA += Math.pow(vector1.get(key), 2);
-        }
-
-        for (double value : vector2.values()) {
-            normB += Math.pow(value, 2);
-        }
-
-        double similarity = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-
-        logger.info("Calculated similarity between series {} and {}: {}", series1.getTitre(), series2.getTitre(), similarity);
-        System.out.println("Fin de calculateSeriesSimilarities");
-        return similarity;
-    }
-
-    public List<Series> recommendSeries(String userId) {
-        logger.info("Début de la recommandation pour l'utilisateur {}", userId);
-        User user = userService.findById(userId);
-        if (user == null) {
-            logger.warn("Utilisateur avec id {} non trouvé", userId);
-            return Collections.emptyList();
-        }
-        logger.info("Utilisateur {} trouvé", userId);
-
-        History userHistory = historyService.getHistoryByUserId(userId);
-        if (userHistory == null) {
-            logger.warn("Aucun historique trouvé pour l'utilisateur {}", userId);
-            return Collections.emptyList();
-        }
-        logger.info("Historique trouvé pour l'utilisateur {}", userId);
-
-        List<String> likedSeries = userHistory.getSerieLike();
-        if (likedSeries.isEmpty()) {
-            logger.info("L'utilisateur {} n'a pas encore aimé de séries", userId);
-            return Collections.emptyList();
-        }
-        logger.info("L'utilisateur {} a aimé des séries", userId);
-        logger.info("Recommandation de séries en cours...");
-
-        List<Series> recommendedSeries = likedSeries.stream()
-                .map(this::getSerieById)
-                .filter(Objects::nonNull)
-                .peek(series -> logger.info("Traitement de la série avec l'id {}", series.getId()))
-                .flatMap(series -> {
-                    List<Series> similarSeries = getSimilarSeries(series.getId());
-                    if (similarSeries.isEmpty()) {
-                        logger.info("Aucune série similaire trouvée pour la série {} aimée par l'utilisateur {}", series.getId(), userId);
-                    } else {
-                        logger.info("Séries similaires trouvées pour la série {} aimée par l'utilisateur {}", series.getId(), userId);
-                    }
-                    return similarSeries.stream();
-                })
-                .distinct()
+        // Récupérer les objets Series correspondants aux IDs
+        List<Series> similarSeries = similarSeriesIds.stream()
+                .map(id -> serieRepository.findById(id).orElse(null))
                 .collect(Collectors.toList());
 
-        logger.info("Recommandations générées pour l'utilisateur {}: {}", userId, recommendedSeries);
-        return recommendedSeries;
+        logger.info("Séries similaires trouvées pour seriesId " + seriesId + ": " + similarSeries.stream().map(Series::getTitre).collect(Collectors.joining(", ")));
+
+        return similarSeries;
+    }
+    /**
+     * Recommande des séries à un utilisateur.
+     * Cette méthode recommande des séries à un utilisateur en fonction de son historique de recherche.
+     * Elle utilise le filtrage collaboratif et le filtrage basé sur le contenu pour recommander des séries.
+     * Malheureusement, cette méthode n'est pas très efficace car elle est très lente.
+     * Pour l'améliorer, on à utilisé des threads pour paralléliser les calculs, mis en cache les resultats et limité le nombre de séries similaires à traiter.
+     * @param userId    l'ID de l'utilisateur
+     * @return          la liste des séries recommandées
+     */
+    public List<Map<Series, String>> recommendSeries(String userId) {
+        // Récupérer les séries que l'utilisateur a visionnées
+        List<String> watchedSeries = historyService.getWatchedSeries(userId);
+
+        // Si l'utilisateur est nouveau ou peu actif, recommander les séries les plus populaires
+        if (watchedSeries.size() < 2) { // 2 série pour avoir un minimum de données
+            return getPopularSeries().stream().limit(10).map(series -> {
+                Map<Series, String> map = new HashMap<>();
+                map.put(series, "Cette série est très populaire.");
+                return map;
+            }).collect(Collectors.toList()); // on retourne les 10 premières séries les plus populaires via le calcul du score de recommandation
+        }
+
+        // Limiter le nombre de séries visionnées à prendre en compte
+        watchedSeries = watchedSeries.subList(Math.max(watchedSeries.size() - 10, 0), watchedSeries.size());
+
+        // Inclure les séries visionnées dans le processus de recommandation
+        Map<Series, Double> recommendedSeriesScore = new ConcurrentHashMap<>();
+        Map<Series, String> recommendedSeriesExplanations = new ConcurrentHashMap<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(4); // Créer un pool de threads
+
+        for (String serieId : watchedSeries) {
+            // Récupérer les séries similaires depuis le cache
+            List<String> similarSeriesIds = cacheSimilarSeries(serieId);
+
+            // Limiter le nombre de séries similaires à traiter
+            similarSeriesIds = similarSeriesIds.subList(0, Math.min(similarSeriesIds.size(), 10));
+
+            for (String similarSeriesId : similarSeriesIds) {
+                List<String> finalSimilarSeriesIds = similarSeriesIds;
+                executorService.submit(() -> {
+                    Series similarSeries = getSerieById(similarSeriesId);
+                    double score = recommendedSeriesScore.getOrDefault(similarSeries, 0.0);
+
+                    // Calculer le score de recommandation par apport à la position dans la liste, le nombre de likes, de vues et de dislikes
+                    score += (finalSimilarSeriesIds.size() - finalSimilarSeriesIds.indexOf(similarSeriesId)) + similarSeries.getLikes() * 0.5 + similarSeries.getViews() * 0.5 - similarSeries.getDislikes() * 0.5;
+
+                    // Réduire le score des séries très populaires pour augmenter la diversité
+                    if (similarSeries.getViews() > 10000) {
+                        score *= 0.9;
+                    }
+
+                    recommendedSeriesScore.put(similarSeries, score);
+                    recommendedSeriesExplanations.put(similarSeries, "Recommandée en fonction de vos recherches.");
+                });
+            }
+        }
+
+        executorService.shutdown(); // Arrêter le pool de threads
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Ajouter les séries les plus populaires à la liste des séries recommandées
+        List<Series> popularSeries = getPopularSeries().stream().limit(5).collect(Collectors.toList()); // Limiter à 5 séries populaires
+        for (Series series : popularSeries) {
+            double score = recommendedSeriesScore.getOrDefault(series, 0.0);
+            // Ajouter un bonus au score pour les séries populaires
+            score += 100;
+            recommendedSeriesScore.put(series, score);
+            recommendedSeriesExplanations.put(series, "Populaire chez les utilisateurs.");
+        }
+
+        // Filtrage collaboratif, recommander des séries aimées par des utilisateurs qui aiment les mêmes séries que l'utilisateur actuel
+        List<User> allUsers = (List<User>) userService.getAllUsers();
+        for (User user : allUsers) {
+            if (!user.getId().equals(userId)) {
+                History otherUserHistory = historyService.getHistoryByUserId(user.getId());
+                if (otherUserHistory == null) {
+                    continue;
+                }
+
+                List<String> otherUserLikes = otherUserHistory.getSerieLike();
+                for (String serieId : otherUserLikes) {
+                    if (!watchedSeries.contains(serieId)) {
+                        Series series = getSerieById(serieId);
+                        if (series != null) {
+                            double score = recommendedSeriesScore.getOrDefault(series, 0.0);
+                            score += 50; // Ajouter un bonus au score pour les séries aimées par des utilisateurs similaires
+                            recommendedSeriesScore.put(series, score);
+                            recommendedSeriesExplanations.put(series, "Recommandée en fonction de vos recherches.");
+                        }
+                    }
+                }
+            }
+        }
+
+        // Tri des séries recommandées par score de recommandation
+        List<Series> recommendedSeries = recommendedSeriesScore.entrySet().stream()
+                .sorted((e1, e2) -> {
+                    // Ajouter un petit nombre aléatoire au score de chaque série pour éviter les séries avec le même score
+                    double score1 = e1.getValue() + Math.random() * 0.1;
+                    double score2 = e2.getValue() + Math.random() * 0.1;
+                    return Double.compare(score2, score1);
+                })
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList()); // On retourne la liste
+
+        // Mélanger les séries recommandées
+
+        Collections.shuffle(recommendedSeries);
+        // Créer une liste de maps pour stocker les séries recommandées et leurs explications
+        List<Map<Series, String>> finalRecommendations = new ArrayList<>();
+        for (Series series : recommendedSeries) {
+            Map<Series, String> map = new HashMap<>();
+            map.put(series, recommendedSeriesExplanations.get(series));
+            finalRecommendations.add(map);
+        }
+
+        return finalRecommendations;
+    }
+    /**
+     * Calcule le score de recommandation d'une série.
+     * @param series    la série
+     * @return          le score de recommandation
+     */
+    private double getRecommendationScore(Series series, List<String> userLikes) {
+        double viewScore = series.getViews();
+        double likeScore = userLikes.contains(series.getId()) ? 1.0 : 0.0;
+        double dislikeScore = series.getDislikes();
+
+        double viewWeight = 0.5;
+        double likeWeight = 1.0;
+        double dislikeWeight = -0.5;
+
+        return viewScore * viewWeight + likeScore * likeWeight + dislikeScore * dislikeWeight;
     }
 
+    private List<Series> getPopularSeries() {
+        // Implémentez cette méthode pour retourner les séries les plus populaires ou tendance
+        // Par exemple, vous pouvez retourner les séries avec le plus grand nombre de vues
+        return serieRepository.findAll().stream()
+                .sorted(Comparator.comparing(Series::getViews).reversed())
+                .limit(10)
+                .collect(Collectors.toList());
+    }
     public void resetSeriesStats() {
         List<Series> allSeries = serieRepository.findAll();
         for (Series series : allSeries) {
@@ -1622,8 +2405,26 @@ public class SerieService {
             serieRepository.save(series);
         }
     }
+    public List<String> cacheSimilarSeries(String seriesId){
+        if (seriesCache.containsKey(seriesId)) {
+            return seriesCache.get(seriesId);
+        }
 
-    public class Pair<F, S> { // paire pour stocker les séries et leur similarité
+        List<Series> similarSeries = getSimilarSeries(seriesId);
+
+        List<String> similarSeriesIds = similarSeries.stream().map(Series::getId).collect(Collectors.toList());
+
+        seriesCache.put(seriesId, similarSeriesIds);
+
+        Series series = getSerieById(seriesId);
+        series.getSimilarSeriesCache().put(seriesId, similarSeriesIds);
+        serieRepository.save(series);
+
+        return similarSeriesIds;
+    }
+
+
+    public class Pair<F, S> { // Pratique pour le calcul des similarités
         private F first;
         private S second;
 
@@ -1645,7 +2446,7 @@ public class SerieService {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\SignupService.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\service\SignupService.java
 
 package com.example.mysearch.service;
 
@@ -1656,6 +2457,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
+/**
+ * Service responsable de l'enregistrement des utilisateurs.
+ */
 @Service
 public class SignupService {
     @Autowired
@@ -1664,6 +2468,13 @@ public class SignupService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * Enregistre un nouvel utilisateur avec les informations fournies.
+     *
+     * @param username le nom d'utilisateur
+     * @param email l'adresse e-mail de l'utilisateur
+     * @param password le mot de passe de l'utilisateur
+     */
     public void enregistrer(String username, String email, String password) {
         System.out.println("Enregistrement utilisateur : " + username);
         User newUser = new User();
@@ -1673,6 +2484,12 @@ public class SignupService {
         userRepository.save(newUser);
     }
 
+    /**
+     * Vérifie si un utilisateur avec le nom donné existe déjà.
+     *
+     * @param name le nom d'utilisateur à vérifier
+     * @return true si l'utilisateur existe, false sinon
+     */
     public boolean userExists(String name) {
         return userRepository.existsByName(name);
     }
@@ -1681,7 +2498,7 @@ public class SignupService {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\UserService.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\service\UserService.java
 
 package com.example.mysearch.service;
 import com.example.mysearch.model.User;
@@ -1692,36 +2509,85 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+/**
+ * Cette classe est responsable de la gestion des utilisateurs.
+ * Elle implémente l'interface UserDetailsService de Spring Security.
+ */
 @Service
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-
+    /**
+     * Constructeur de la classe UserService.
+     * 
+     * @param userRepository   Le repository utilisé pour accéder aux données des utilisateurs.
+     * @param passwordEncoder  L'encodeur de mot de passe utilisé pour sécuriser les mots de passe des utilisateurs.
+     */
     public UserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Récupère un utilisateur par son identifiant.
+     * 
+     * @param id  L'identifiant de l'utilisateur.
+     * @return    L'utilisateur correspondant à l'identifiant, ou null s'il n'existe pas.
+     */
     public User getUserById(Long id) {
         return userRepository.findById(String.valueOf(id)).orElse(null);
     }
 
+    /**
+     * Crée un nouvel utilisateur.
+     * Le mot de passe de l'utilisateur est encodé avant d'être enregistré.
+     * 
+     * @param user  L'utilisateur à créer.
+     * @return      L'utilisateur créé.
+     */
     public User createUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
+
+    /**
+     * Récupère un utilisateur par son identifiant.
+     * 
+     * @param id  L'identifiant de l'utilisateur.
+     * @return    L'utilisateur correspondant à l'identifiant, ou null s'il n'existe pas.
+     */
     public User findById(String id) {
         return userRepository.findById(id).orElse(null);
     }
 
+    /**
+     * Supprime un utilisateur par son identifiant.
+     * 
+     * @param id  L'identifiant de l'utilisateur à supprimer.
+     */
     public void deleteUser(Long id) {
         userRepository.deleteById(String.valueOf(id));
     }
+
+    /**
+     * Supprime un utilisateur par son identifiant.
+     * 
+     * @param id  L'identifiant de l'utilisateur à supprimer.
+     */
     public void deleteUser(String id){
         userRepository.deleteById(id);
     }
 
+    /**
+     * Met à jour les informations d'un utilisateur.
+     * Le mot de passe de l'utilisateur est encodé avant d'être enregistré.
+     * 
+     * @param id    L'identifiant de l'utilisateur à mettre à jour.
+     * @param user  Les nouvelles informations de l'utilisateur.
+     * @return      L'utilisateur mis à jour, ou null s'il n'existe pas.
+     */
     public User updateUser(Long id, User user) {
         User userToUpdate = userRepository.findById(String.valueOf(id)).orElse(null);
         if (userToUpdate != null) {
@@ -1734,32 +2600,62 @@ public class UserService implements UserDetailsService {
         return null;
     }
 
+    /**
+     * Récupère tous les utilisateurs.
+     * 
+     * @return  Une collection contenant tous les utilisateurs.
+     */
     public Iterable<User> getAllUsers() {
         return userRepository.findAll();
     }
 
+    /**
+     * Charge les détails d'un utilisateur par son nom d'utilisateur.
+     * 
+     * @param username  Le nom d'utilisateur de l'utilisateur à charger.
+     * @return          Les détails de l'utilisateur.
+     * @throws UsernameNotFoundException  Si le nom d'utilisateur est vide ou si l'utilisateur n'est pas trouvé.
+     */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (username == null || username.trim().isEmpty()) {
-            throw new UsernameNotFoundException("Username is empty");
+            throw new UsernameNotFoundException("Le nom d'utilisateur est vide");
         }
         User user = userRepository.findByName(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec le nom d'utilisateur : " + username));
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getName())
                 .password(user.getPassword())
-                .authorities("USER") // or any roles you have
+                .authorities("USER") // ou tout autre rôle que vous avez
                 .build();
     }
 
+    /**
+     * Supprime un utilisateur de la base de données par son nom d'utilisateur.
+     * 
+     * @param username  Le nom d'utilisateur de l'utilisateur à supprimer.
+     */
     public void removeUserFromDatabase(String username) {
         userRepository.deleteByName(username);
     }
+
+    /**
+     * Ajoute une recherche à l'historique d'un utilisateur.
+     * 
+     * @param name    Le nom d'utilisateur de l'utilisateur.
+     * @param search  La recherche à ajouter à l'historique.
+     */
     public void addSearchToHistory(String name,String search) {
         userRepository.addSearchToHistory(name,search);
     }
 
+    /**
+     * Récupère un utilisateur par son nom d'utilisateur.
+     * 
+     * @param username  Le nom d'utilisateur de l'utilisateur.
+     * @return          L'utilisateur correspondant au nom d'utilisateur, ou null s'il n'existe pas.
+     */
     public User getUserByUsername(String username) {
         return userRepository.findByName(username).orElse(null);
     }
@@ -1768,11 +2664,10 @@ public class UserService implements UserDetailsService {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\utils\TFIDFCalculator.java
+File: C:\Users\admin\projects\mySsearch\src\main\java\com\example\mysearch\utils\TFIDFCalculator.java
 
 package com.example.mysearch.utils;
 
-import com.example.mysearch.config.MySpringConfiguration;
 import com.example.mysearch.model.Series;
 import com.example.mysearch.repository.SerieRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -1786,43 +2681,95 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
+
+/**
+ * Cette classe est utilisée pour calculer le score TF-IDF (Term Frequency-Inverse Document Frequency)
+ * et effectuer des opérations associées sur une liste de documents.
+ */
 @Component
 public class TFIDFCalculator {
     private final Map<String, Double> idfCache;
     private final SerieRepository serieRepository;
+
+    /**
+     * Constructeur de la classe TFIDFCalculator.
+     * 
+     * @param serieRepository le repository utilisé pour accéder aux séries.
+     */
     @Autowired
     public TFIDFCalculator(SerieRepository serieRepository) {
         idfCache = new HashMap<>();
         this.serieRepository = serieRepository;
     }
-    // Call this method when your corpus changes to update the IDF values
+
+    /**
+     * Met à jour le cache IDF avec les nouvelles valeurs IDF.
+     * 
+     * @param docs la liste de documents utilisée pour calculer les valeurs IDF.
+     */
     public void updateIdfCache(List<List<String>> docs) {
         Set<String> uniqueTerms = new HashSet<>();
         docs.forEach(uniqueTerms::addAll);
         uniqueTerms.forEach(term -> idfCache.put(term, idf(docs, term)));
     }
 
+    /**
+     * Calcule le score TF (Term Frequency) d'un terme dans un document.
+     * 
+     * @param doc  le document.
+     * @param term le terme.
+     * @return le score TF du terme dans le document.
+     */
     private double tf(List<String> doc, String term) {
         long count = doc.stream().filter(term::equalsIgnoreCase).count();
         return (double) count / doc.size();
     }
 
+    /**
+     * Calcule la valeur IDF (Inverse Document Frequency) d'un terme dans une liste de documents.
+     * 
+     * @param docs la liste de documents.
+     * @param term le terme.
+     * @return la valeur IDF du terme dans la liste de documents.
+     */
     private double idf(List<List<String>> docs, String term) {
         long count = docs.stream().filter(doc -> doc.contains(term.toLowerCase())).count();
         if (count == 0) return 0;
         return Math.log((double) docs.size() / count);
     }
 
+    /**
+     * Calcule le score TF-IDF d'un terme dans un document.
+     * 
+     * @param doc  le document.
+     * @param term le terme.
+     * @return le score TF-IDF du terme dans le document.
+     */
     public double tfIdf(List<String> doc, String term) {
-        // Use cached IDF value if available
+        // Utilise la valeur IDF mise en cache si elle est disponible
         double termIdf = idfCache.containsKey(term) ? idfCache.get(term) : idf(Collections.singletonList(doc), term);
         return tf(doc, term) * termIdf;
     }
+
+    /**
+     * Lit un fichier JSON et retourne son contenu sous forme de liste de maps.
+     * 
+     * @param jsonFilePath le chemin du fichier JSON.
+     * @return le contenu du fichier JSON sous forme de liste de maps.
+     * @throws Exception si une erreur se produit lors de la lecture du fichier JSON.
+     */
     public List<Map<String, Object>> readJsonFile(String jsonFilePath) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(new File(jsonFilePath), new TypeReference<List<Map<String, Object>>>() {});
     }
 
+    /**
+     * Recherche les séries les plus similaires en fonction des termes de recherche donnés.
+     * 
+     * @param terms les termes de recherche.
+     * @param n     le nombre de séries à retourner.
+     * @return une liste de maps contenant les séries les plus similaires et leur score de similarité.
+     */
     public List<Map<String, Object>> findTopSeries(List<String> terms, int n) {
         List<Series> seriesList = serieRepository.findAll();
         List<Map<String, Object>> seriesSimilarities = new ArrayList<>();
@@ -1845,21 +2792,25 @@ public class TFIDFCalculator {
                 .limit(n)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Supprime les accents des termes de recherche donnés.
+     * 
+     * @param searchTerms les termes de recherche.
+     * @return une liste de termes de recherche sans accents.
+     */
     public static List<String> removeAccents(List<String> searchTerms) {
         return searchTerms.stream()
                 .map(term -> Normalizer.normalize(term, Normalizer.Form.NFD))
                 .map(term -> term.replaceAll("[\\p{InCombiningDiacriticalMarks}]", ""))
                 .collect(Collectors.toList());
     }
-    public static void main(String[] args) {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MySpringConfiguration.class);
-        TFIDFCalculator calculator = context.getBean(TFIDFCalculator.class);
-    }
+
 }
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\ConnexionTest.java
+File: C:\Users\admin\projects\mySsearch\src\test\java\com\example\mysearch\ConnexionTest.java
 
 package com.example.mysearch;
 
@@ -1953,7 +2904,7 @@ class ConnexionTest {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\DBRegisterTest.java
+File: C:\Users\admin\projects\mySsearch\src\test\java\com\example\mysearch\DBRegisterTest.java
 
 package com.example.mysearch;
 
@@ -1996,7 +2947,7 @@ class DBRegisterTest {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\DeleteUserTest.java
+File: C:\Users\admin\projects\mySsearch\src\test\java\com\example\mysearch\DeleteUserTest.java
 
 package com.example.mysearch;
 
@@ -2006,7 +2957,7 @@ public class DeleteUserTest {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\HistoryTest.java
+File: C:\Users\admin\projects\mySsearch\src\test\java\com\example\mysearch\HistoryTest.java
 
 package com.example.mysearch;
 
@@ -2052,7 +3003,7 @@ public class HistoryTest {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\MySearchApplicationTests.java
+File: C:\Users\admin\projects\mySsearch\src\test\java\com\example\mysearch\MySearchApplicationTests.java
 
 package com.example.mysearch;
 
@@ -2107,7 +3058,7 @@ class MySearchApplicationTests {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\RegisterTest.java
+File: C:\Users\admin\projects\mySsearch\src\test\java\com\example\mysearch\RegisterTest.java
 
 package com.example.mysearch;
 
@@ -2179,7 +3130,7 @@ class RegisterTest {
 
 --------------------------------------------------------------------------------
 
-File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\SecurityConfigTest.java
+File: C:\Users\admin\projects\mySsearch\src\test\java\com\example\mysearch\SecurityConfigTest.java
 
 package com.example.mysearch;
 
@@ -2272,6 +3223,46 @@ public class SecurityConfigTest {
 
 }
 
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\admin\projects\mySsearch\src\test\java\com\example\mysearch\SerieServiceTest.java
+
+package com.example.mysearch;
+
+import com.example.mysearch.model.Series;
+import com.example.mysearch.service.SerieService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+public class SerieServiceTest {
+
+    @Autowired
+    private SerieService serieService;
+
+    @Test
+    public void testGetSimilarSeries() {
+        // Remplacer par un ID de série valide dans votre base de données
+        String seriesId = "65a7fc3243ee036fe9602ad9";
+
+        List<Series> similarSeries = serieService.getSimilarSeries(seriesId);
+
+        // Vérifiez que la liste n'est pas vide
+        assertFalse(similarSeries.isEmpty());
+
+        // Récupérez la série avec le score de similarité le plus élevé
+        Series mostSimilarSeries = similarSeries.get(0);
+
+        // Vérifiez que la série la plus similaire est bien dans la liste des séries similaires
+        assertTrue(similarSeries.contains(mostSimilarSeries));
+    }
+}
 
 --------------------------------------------------------------------------------
 

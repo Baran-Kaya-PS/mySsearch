@@ -65,6 +65,16 @@
                 <a class="nav-link" href="/api/serie/recommendations">Recommendations</a>
             </li>
         </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" th:text="${#authentication.name}">NomUtilisateur</a>
+            </li>
+            <li class="nav-item">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-danger">Déconnexion</button>
+                </form>
+            </li>
+        </ul>
     </div>
 </nav>
 

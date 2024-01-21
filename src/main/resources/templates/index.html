@@ -76,12 +76,12 @@
 <div class="container">
     <form th:action="@{/api/serie/search}" method="get" class="search-bar d-flex flex-column align-items-center">
         <label>
+            <h2 class="text-center mt-5">Faites une recherche</h2>
             <input type="text" th:name="keyword" class="form-control" placeholder="Recherchez une série">
         </label>
         <button type="submit" class="btn btn-outline-primary mt-2">Rechercher</button>
     </form>
 
-    <h2 class="text-center mt-5">Séries Recommandées Pour Vous</h2>
 
     <div class="row text-center mt-4">
         <div class="row text-center mt-4">

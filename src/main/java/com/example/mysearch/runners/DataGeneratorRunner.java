@@ -46,7 +46,7 @@ public class DataGeneratorRunner implements CommandLineRunner {
         List<String> keywords = Arrays.asList("action", "drama", "comedy", "thriller", "sci-fi", "romance", "horror", "adventure", "mystery", "fantasy");
 
         // Générer 1000 utilisateurs
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 1000; i < 1600; i++) {
             User user = new User();
             user.setName("user" + i);
             user.setEmail("user" + i + "@example.com");
@@ -79,5 +79,6 @@ public class DataGeneratorRunner implements CommandLineRunner {
         }
 
          */
+
     }
 }
