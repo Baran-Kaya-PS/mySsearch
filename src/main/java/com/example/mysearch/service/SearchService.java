@@ -10,17 +10,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Service de recherche pour les séries.
+ */
 @Service
 public class SearchService {
     private final SerieRepository serieRepository;
     private final TFIDFCalculator tfidfCalculator;
 
+    /**
+     * Constructeur du service de recherche.
+     *
+     * @param serieRepository   le repository des séries
+     * @param tfidfCalculator   le calculateur TF-IDF
+     */
     @Autowired
     public SearchService(SerieRepository serieRepository, TFIDFCalculator tfidfCalculator) {
         this.serieRepository = serieRepository;
         this.tfidfCalculator = tfidfCalculator;
     }
 
+    /**
+     * Recherche les séries par mot-clé.
+     *
+     * @param keyword   le mot-clé de recherche
+     * @return          la liste des séries correspondantes, triées par score décroissant
+     */
     public List<Series> searchSeriesByKeyword(String keyword) {
         List<Series> allSeries = serieRepository.findAll();
         return allSeries.stream()

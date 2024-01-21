@@ -1,0 +1,2277 @@
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\MySearchApplication.java
+
+package com.example.mysearch;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySearchApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(MySearchApplication.class, args);
+    }
+
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\config\MySpringConfiguration.java
+
+package com.example.mysearch.config;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@ComponentScan(basePackages = "com.example.mysearch")
+public class MySpringConfiguration {
+
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\config\SecurityConfiguration.java
+
+package com.example.mysearch.config;
+
+import java.util.Arrays;
+
+public class SecurityConfiguration {
+
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\AuthController.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.beans.factory.ObjectProvider;
+
+import java.net.BindException;
+import java.net.http.HttpRequest;
+
+@Controller
+public class AuthController {
+    private final ObjectProvider<AuthenticationManager> authenticationManagerProvider;
+    @Autowired
+    public AuthController(ObjectProvider<AuthenticationManager> authenticationManagerProvider) {
+        this.authenticationManagerProvider = authenticationManagerProvider;
+    }
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/login")
+    public String getLoginPage() {
+        return "login";
+    }
+
+    @PostMapping("/login")
+    public String handleLogin(@RequestParam String username, @RequestParam String password, HttpServletRequest request) {
+        try {
+            AuthenticationManager authManager = authenticationManagerProvider.getObject();
+            Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+
+            return "redirect:/";
+        } catch (AuthenticationException e) {
+            return "/login";
+        }
+    }
+    @GetMapping("/logout")
+    @ResponseBody
+    public String logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+        if (authentication != null) {
+            new SecurityContextLogoutHandler().logout(request, response, authentication);
+        }
+        return "Logged out successfully.";
+    }
+    @GetMapping("/deleteAccount")
+    @ResponseBody
+    public String deleteAccount(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+        if (authentication != null){
+            String username = authentication.getName();
+            userService.removeUserFromDatabase(username);
+        }
+        return "Account deleted successfully.";
+    }
+    @ExceptionHandler(value = {BindException.class, MethodArgumentNotValidException.class})
+    public ResponseEntity<String> handleBindException(BindException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\EvaluationControler.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.model.Evaluation;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.example.mysearch.service.EvaluationService;
+@RestController
+@RequestMapping("/api/evaluation")
+
+public class EvaluationControler {
+    private final EvaluationService evaluationService;
+
+    public EvaluationControler(EvaluationService evaluationService) {
+        this.evaluationService = evaluationService;
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<Iterable<Evaluation>> getAllEvaluations() {
+        Iterable<Evaluation> evaluations = evaluationService.getAllEvaluations();
+        return ResponseEntity.ok(evaluations);
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<Evaluation> getEvaluationById(@PathVariable Long id) {
+        Evaluation evaluation = evaluationService.getEvaluationById(id);
+        return evaluation != null ? ResponseEntity.ok(evaluation): ResponseEntity.notFound().build();
+    }
+    @PostMapping("/create")
+    public ResponseEntity<Evaluation> createEvaluation(@Valid @RequestBody Evaluation evaluation) {
+        Evaluation savedEvaluation = evaluationService.createEvaluation(evaluation);
+        return new ResponseEntity<>(savedEvaluation, HttpStatus.CREATED);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<Evaluation> updateEvaluation(@PathVariable Long id, @Valid @RequestBody Evaluation evaluation) {
+        Evaluation updatedEvaluation = evaluationService.updateEvaluation(id, evaluation);
+        return new ResponseEntity<>(updatedEvaluation, HttpStatus.OK);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Evaluation> deleteEvaluation(@PathVariable Long id) {
+        evaluationService.deleteEvaluation(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\HistoryControler.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.model.History;
+import com.example.mysearch.service.HistoryService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/history")
+public class HistoryControler {
+    private final HistoryService historyService;
+
+    public HistoryControler(HistoryService historyService) {
+        this.historyService = historyService;
+    }
+
+    @GetMapping("/")
+    public List<History> getAllHistoryRecords() {
+        return historyService.getAllHistoryRecords();
+    }
+
+    @GetMapping("/{id}")
+    public History getHistoryRecordById(@PathVariable String id) {
+        return historyService.getHistoryByUserId(id);
+    }
+
+    @PostMapping("/")
+    public History createHistoryRecord(@RequestBody History historyRecord) {
+        return historyService.createHistoryRecord(historyRecord);
+    }
+
+    @PutMapping("/{id}")
+    public History updateHistoryRecord(@PathVariable String id, @RequestBody History historyRecord) {
+        return historyService.updateHistoryRecord(id, historyRecord);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteHistoryRecord(@PathVariable String id) {
+        historyService.deleteHistoryRecord(id);
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\SerieControler.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.model.Series;
+import com.example.mysearch.model.User;
+import com.example.mysearch.service.HistoryService;
+import com.example.mysearch.service.SerieService;
+import com.example.mysearch.service.UserService;
+import com.example.mysearch.utils.TFIDFCalculator;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.ui.Model;
+import javax.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.security.Principal;
+import java.util.List;
+
+@Controller // Remplacer @RestController par @Controller car on retourne une vue HTML et non du JSON
+@RequestMapping("/api/serie")
+public class SerieControler {
+    private final SerieService serieService;
+    private final UserService userService;
+    private final TFIDFCalculator tfidfCalculator;
+    private final HistoryService historyService;
+    private static final Logger logger = LoggerFactory.getLogger(SerieControler.class);
+
+    public SerieControler(SerieService serieService, UserService userService, TFIDFCalculator tfidfCalculator, HistoryService historyService) {
+        this.serieService = serieService;
+        this.userService = userService;
+        this.tfidfCalculator = tfidfCalculator;
+        this.historyService = historyService;
+    }
+    public ResponseEntity<Iterable<Series>> getAllSeries() {
+        Iterable<Series> series = serieService.getAllSeries();
+        return ResponseEntity.ok(series);
+    }
+    public ResponseEntity<Series> getSerieById(String serieId) {
+        Series serie = serieService.getSerieById(serieId);
+        return serie != null ? ResponseEntity.ok(serie): ResponseEntity.notFound().build();
+    }
+    public ResponseEntity<Series> addSerie(Series serie) {
+        Series savedSerie = serieService.addSerie(serie);
+        return ResponseEntity.ok(savedSerie);
+    }
+    public ResponseEntity<Series> deleteSerie(String serieId) {
+        serieService.deleteSerie(serieId);
+        return ResponseEntity.ok().build();
+    }
+    @GetMapping("/search")
+    public String search(@RequestParam(required = false) String keyword, Model model, Principal principal) {
+        if (keyword != null && !keyword.isEmpty()) {
+            try {
+                List<Series> bestSeries = (List<Series>) serieService.searchSeriesByKeyword(keyword);
+                model.addAttribute("series", bestSeries);
+
+                String username = principal.getName();
+                User user = userService.getUserByUsername(username);
+                if (user != null) {
+                    String userId = user.getId();
+                    historyService.addSearchToHistory(userId, keyword);
+                }
+
+            } catch (Exception e) {
+                model.addAttribute("error", "Erreur lors de la recherche : " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            model.addAttribute("error", "Veuillez entrer un mot-clé pour la recherche.");
+        }
+        return "index";
+    }
+    @GetMapping("/click")
+    public String handleSerieClick(@RequestParam String serieId, Principal principal,Model model) {
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+        if (user != null) {
+            historyService.addSerieClick(user.getId(), serieId);
+            serieService.incrementViewCount(serieId);
+        }
+        Series serie = serieService.getSerieById(serieId);
+        model.addAttribute("serie", serie);
+        return "serie"; // ou toute autre page appropriée
+    }
+    @GetMapping("/dislike")
+    public String handleDislike(@RequestParam String serieName, Principal principal, Model model) {
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+        if (user != null) {
+            String userId = user.getId();
+            historyService.addSerieDislike(userId, serieName);
+            String serieId = serieService.getSerieByTitle(serieName).getId();
+            serieService.incrementDislikeCount(serieService.getSerieByTitle(serieName).getId());
+        }
+        Series serie = serieService.getSerieByTitle(serieName);
+        model.addAttribute("serie", serie);
+        return "serie";
+    }
+
+    @GetMapping("/like")
+    public String handleLike(@RequestParam String serieName, Principal principal, Model model) {
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+        if (user != null) {
+            String userId = user.getId();
+            historyService.addSerieLike(userId, serieName);
+
+            serieService.incrementLikeCount(serieService.getSerieByTitle(serieName).getId());
+        }
+        Series serie = serieService.getSerieByTitle(serieName);
+        model.addAttribute("serie", serie);
+        return "serie";
+    }
+    @GetMapping("/recommendations")
+    public String getRecommendations(Principal principal, Model model) {
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+        if (user != null) {
+            List<Series> recommendations = serieService.recommendSeries(user.getId());
+            model.addAttribute("series", recommendations);
+        }
+        return "recommandation";
+    }
+
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\SignupController.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.model.User;
+import com.example.mysearch.service.SignupService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import java.net.URI;
+
+@Controller
+public class SignupController {
+    @Autowired
+    private SignupService signupService;
+
+    @GetMapping("/inscription")
+    public String inscriptionForm() {
+        return "signup"; // retourne la page d'inscription
+    }
+
+    @PostMapping("/inscription")
+    public ModelAndView inscriptionSubmit(@Valid User user, BindingResult bindingResult, HttpServletResponse response) {
+        ModelAndView modelAndView = new ModelAndView();
+
+        if (signupService.userExists(user.getName())) {
+            bindingResult.rejectValue("name", "error.user", "Ce nom d'utilisateur existe déjà");
+            response.setStatus(HttpStatus.BAD_REQUEST.value()); // Set the HTTP status here.
+            modelAndView.addObject("user", user);
+            modelAndView.setViewName("signup");
+            return modelAndView;
+        }
+
+        if (bindingResult.hasErrors()) {
+            modelAndView.setViewName("signup");
+            modelAndView.addObject("user", user);
+            return modelAndView;
+        }
+
+        signupService.enregistrer(user.getName(), user.getEmail(), user.getPassword());
+        modelAndView.setViewName("/login");
+        return modelAndView;
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\UserControler.java
+
+package com.example.mysearch.controller;
+
+import com.example.mysearch.model.User;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.example.mysearch.service.UserService;
+
+@RestController
+@RequestMapping("/api/user")
+public class UserControler {
+    private final UserService userService;
+
+    public UserControler(UserService userService) {
+        this.userService = userService;
+    }
+    @PostMapping("/create")
+    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
+        User savedUser = userService.createUser(user);
+        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        return user != null ? ResponseEntity.ok(user): ResponseEntity.notFound().build();
+    }
+    @GetMapping("/all")
+    public ResponseEntity<Iterable<User>> getAllUsers() {
+        Iterable<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody User user) {
+        User updatedUser = userService.updateUser(id, user);
+        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<User> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\controller\ViewController.java
+
+package com.example.mysearch.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class ViewController {
+
+    @GetMapping("/api/home")
+    public String home() {
+        return "index";
+    }
+    @GetMapping("/api/recommendations")
+    public String recommendations() {
+        return "recommandation";
+    }
+
+    @GetMapping("/api/series")
+    public String series() {
+        return "serie";
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\Evaluation.java
+
+package com.example.mysearch.model;
+import lombok.Data;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Data
+@Document
+public class Evaluation {
+    private String id;
+    private String utilisateurId;
+    private String serieId;
+    private boolean like;
+
+    public Evaluation() {}
+
+    public Evaluation(String id, String utilisateurId, String serieId, boolean like) {
+        this.id = id;
+        this.utilisateurId = utilisateurId;
+        this.serieId = serieId;
+        this.like = like;
+    }
+
+    public String toString() {
+        return "Evaluation{" +
+                "id='" + id + '\'' +
+                ", utilisateurId='" + utilisateurId + '\'' +
+                ", serieId='" + serieId + '\'' +
+                ", like=" + like +
+                '}';
+    }
+
+    public String toCSV() {
+        return id + "," + utilisateurId + "," + serieId + "," + like;
+    }
+
+    public Boolean isLiked() {
+        return like;
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\History.java
+
+package com.example.mysearch.model;
+
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.format.annotation.DateTimeFormat;
+import lombok.Data;
+
+import java.util.*;
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "historique")
+public class History {
+    @Id
+    private String id;
+    private String utilisateurId;
+    @DateTimeFormat(pattern = "yyyy-MM-dd-HH-mm")
+    private List<String> date;
+    private Map<String, Integer> searchCount = new HashMap<>();
+    private Map<String, Integer> clickCount = new HashMap<>();
+    private String serieId;
+    private List<String> serieDislike = new ArrayList<>();
+    private List<String> serieLike = new ArrayList<>();
+    public History(String utilisateurId) {
+        this.utilisateurId = utilisateurId;
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\Series.java
+
+package com.example.mysearch.model;
+
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Data
+@Document(collection = "series")
+public class Series {
+    @Id
+    private String id;
+
+    @Field("title")
+    private String titre;
+
+    @Field("tfidf_vectors")
+    private Map<String, Double> vecteursTFIDF = new HashMap<>();
+
+    private String imageName;
+    private int likes;
+    private int dislikes;
+    private int views;
+
+    public Series() {
+    }
+
+    public Series(String id, String titre, Map<String, Double> vecteursTFIDF) {
+        this.id = id;
+        this.titre = titre;
+        this.vecteursTFIDF = vecteursTFIDF;
+    }
+
+    @Override
+    public String toString() {
+        return "Serie{" +
+                "id='" + id + '\'' +
+                ", titre='" + titre + '\'' +
+                ", vecteursTFIDF=" + vecteursTFIDF +
+                '}';
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\SeriesSimilarity.java
+
+package com.example.mysearch.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "series_similarities")
+public class SeriesSimilarity {
+    @Id
+    private String id;
+    private String series1Id;
+    private String series2Id;
+    private double similarity;
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\model\User.java
+
+package com.example.mysearch.model;
+
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Data
+@Document(collection = "users")
+public class User {
+    @Id
+    private String id;
+
+    @NotBlank(message = "Nom obligatoire")
+    private String name;
+
+    @NotBlank(message = "Email obligatoire")
+    @Email(message = "Email invalide")
+    private String email;
+
+    @NotBlank(message = "Mot de passe obligatoire")
+    private String password;
+
+    @Field("historique_recherches")
+    private List<String> historiqueRecherches;
+
+    @Field("viewed_series_post_search")
+    private List<Evaluation> viewedSeriesPostSearch;
+
+    @Field("evaluations")
+    private Map<String, Boolean> evaluations;
+
+
+    public User() {}
+
+    public User(String name, String email, String password, List<String> historiqueRecherches, List<Evaluation> viewedSeriesPostSearch, Map<String, Boolean> evaluations) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.historiqueRecherches = historiqueRecherches;
+        this.viewedSeriesPostSearch = viewedSeriesPostSearch;
+        this.evaluations = evaluations;
+    }
+
+    public void addEvaluation(Evaluation evaluation) {
+        if (this.evaluations == null) {
+            this.evaluations = new HashMap<String, Boolean>();
+        }
+        this.evaluations.put(evaluation.getSerieId(), evaluation.isLiked());
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\EvaluationRepository.java
+
+package com.example.mysearch.repository;
+import com.example.mysearch.model.Evaluation;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+public interface EvaluationRepository extends MongoRepository<Evaluation, String>{
+    List<Evaluation> findByUtilisateurId(String utilisateurId);
+    List<Evaluation> findBySerieId(String serieId);
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\HistoryRepository.java
+
+package com.example.mysearch.repository;
+
+import com.example.mysearch.model.History;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface HistoryRepository extends MongoRepository<History, String>{
+    Optional<History> findByUtilisateurId(String utilisateurId);
+    List<History> findBySerieId(String serieId);
+    void deleteByUtilisateurId(String id);
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\SerieRepository.java
+
+package com.example.mysearch.repository;
+import com.example.mysearch.model.Series;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+public interface SerieRepository extends MongoRepository<Series, String>{
+    List<Series> findByTitre(String titre);
+
+    boolean existsByTitre(String name);
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\SeriesSimilarityRepository.java
+
+package com.example.mysearch.repository;
+
+import com.example.mysearch.model.SeriesSimilarity;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import java.util.List;
+
+public interface SeriesSimilarityRepository extends MongoRepository<SeriesSimilarity, String> {
+    List<SeriesSimilarity> findBySeries1Id(String seriesId);
+    List<SeriesSimilarity> findBySeries2Id(String seriesId);
+
+    List<SeriesSimilarity> findBySeries1IdOrSeries2Id(String seriesId, String seriesId1);
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\UserRepository.java
+
+package com.example.mysearch.repository;
+
+import com.example.mysearch.model.User;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface UserRepository extends MongoRepository<User, String>, UserRepositoryCustom {
+    List<User> findByEmail(String email);
+    Optional<User> findByName(String nom);
+    
+    Optional<User> findById (String id);
+
+    boolean existsByName(String name);
+
+    void deleteByName(String username);
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\UserRepositoryCustom.java
+
+package com.example.mysearch.repository;
+
+public interface UserRepositoryCustom {
+    void addSearchToHistory(String userId, String searchTerm);
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\repository\UserRepositoryImpl.java
+
+package com.example.mysearch.repository;
+
+import com.example.mysearch.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Update;
+
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
+public class UserRepositoryImpl implements UserRepositoryCustom {
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    @Override
+    public void addSearchToHistory(String userId, String searchTerm) {
+        mongoTemplate.updateFirst(
+                query(where("id").is(userId)),
+                new Update().push("historiqueRecherches", searchTerm),
+                User.class
+        );
+    }
+}
+
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\DataCleanupRunner.java
+
+package com.example.mysearch.runners;
+
+import com.example.mysearch.service.HistoryService;
+import com.example.mysearch.service.SerieService;
+import com.example.mysearch.service.UserService;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+@Order(1)
+@Component
+public class DataCleanupRunner implements CommandLineRunner {
+
+    private final UserService userService;
+    private final HistoryService historyService;
+    private final SerieService serieService;
+
+    public DataCleanupRunner(UserService userService, HistoryService historyService, SerieService serieService) {
+        this.userService = userService;
+        this.historyService = historyService;
+        this.serieService = serieService;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        /*
+        userService.getAllUsers().forEach(user -> userService
+                .deleteUser(user.getId()));
+        historyService.getAllHistoryRecords().forEach(history -> historyService.deleteHistoryRecord(history.getId()));
+        serieService.resetSeriesStats();
+         */
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\DataGeneratorRunner.java
+
+package com.example.mysearch.runners;
+
+import com.example.mysearch.model.Series;
+import com.example.mysearch.model.User;
+import com.example.mysearch.service.HistoryService;
+import com.example.mysearch.service.SerieService;
+import com.example.mysearch.service.UserService;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+@Component
+@Order(2)
+public class DataGeneratorRunner implements CommandLineRunner {
+
+    private final UserService userService;
+    private final SerieService serieService;
+    private final HistoryService historyService;
+
+    public DataGeneratorRunner(UserService userService, SerieService serieService, HistoryService historyService) {
+        this.userService = userService;
+        this.serieService = serieService;
+        this.historyService = historyService;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        /*
+        Random random = new Random();
+
+        // Liste des mots-clés possibles
+        List<String> keywords = Arrays.asList("action", "drama", "comedy", "thriller", "sci-fi", "romance", "horror", "adventure", "mystery", "fantasy");
+
+        // Générer 1000 utilisateurs
+        for (int i = 0; i < 1000; i++) {
+            User user = new User();
+            user.setName("user" + i);
+            user.setEmail("user" + i + "@example.com");
+            user.setPassword("password");
+            userService.createUser(user);
+
+            // Pour chaque utilisateur, générer des vues, des likes et des recherches aléatoires pour les séries
+            List<Series> allSeries = (List<Series>) serieService.getAllSeries();
+            for (Series series : allSeries) {
+                if (random.nextDouble() < 0.9) { // Augmentez cette valeur pour générer plus de likes
+                    historyService.addSerieLike(user.getId(), series.getTitre());
+                    serieService.incrementLikeCount(series.getId());
+                }
+                if (random.nextBoolean()) {
+                    historyService.addSerieClick(user.getId(), series.getId());
+                    serieService.incrementViewCount(series.getId());
+                }
+                if (random.nextDouble() < 0.1) { // Ajoutez des dislikes
+                    historyService.addSerieDislike(user.getId(), series.getTitre());
+                    serieService.incrementDislikeCount(series.getId());
+                }
+                // Ajouter un mot-clé de recherche aléatoire à l'historique de l'utilisateur
+                String randomKeyword = keywords.get(random.nextInt(keywords.size()));
+                historyService.addSearchToHistory(user.getId(), randomKeyword);
+
+                // ajouter des prints des data
+                System.out.println("Utilisateur généré : " + user.getName());
+                System.out.println("Historique généré : " + historyService.getHistoryByUserId(user.getId()));
+            }
+        }
+
+         */
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\InitialiazeProject.java
+
+package com.example.mysearch.runners;
+
+public class InitialiazeProject {
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\SimilarityRunner.java
+
+package com.example.mysearch.runners;
+
+import com.example.mysearch.service.SerieService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class SimilarityRunner implements CommandLineRunner {
+
+    private final SerieService serieService;
+
+    @Autowired
+    public SimilarityRunner(SerieService serieService) {
+        this.serieService = serieService;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        serieService.calculateSeriesSimilarities();
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\runners\TFIDFRunner.java
+
+package com.example.mysearch.runners;
+
+import com.example.mysearch.utils.TFIDFCalculator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static java.util.Arrays.*;
+
+@Component
+public class TFIDFRunner implements CommandLineRunner {
+
+    private final TFIDFCalculator calculator;
+
+    @Autowired
+    public TFIDFRunner(TFIDFCalculator calculator) {
+        this.calculator = calculator;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        /*
+        List<String> searchTerms = asList("prison", "évader", "détenu");
+        searchTerms = TFIDFCalculator.removeAccents(searchTerms);
+        int topN = 10;
+        List<Map<String, Object>> topSeries = calculator.findTopSeries(searchTerms, topN);
+        // Affichage des résultats
+        topSeries.forEach(entry -> System.out.println("Série : " + entry.get("title") + ", Score TF-IDF : " + entry.get("similarity")));
+         */
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\security\PasswordEncoderConfig.java
+
+package com.example.mysearch.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+public class PasswordEncoderConfig {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\security\SecurityConfig.java
+
+package com.example.mysearch.security;
+
+import com.example.mysearch.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Désactiver CSRF ici
+        http
+                //.csrf(csrf -> {
+                //    csrf.csrfTokenRepository(customCsrfTokenRepository());
+                //})
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/inscription", "/login", "/recherche", "/compte","/","/api/serie/search","/image/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login") // URL de la page de connexion
+                        .loginProcessingUrl("/perform_login") // URL de traitement du formulaire de connexion
+                        .permitAll() // Accès à tous les utilisateurs
+                        .defaultSuccessUrl("/", true) // Redirection après connexion réussie
+                        .failureUrl("/login?error=true")
+                        .usernameParameter("username")
+                        .passwordParameter("password")
+                )
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/connexion?logout")
+                        .permitAll()
+                );
+
+        return http.build();
+    }
+
+    private CsrfTokenRepository customCsrfTokenRepository() {
+        return new HttpSessionCsrfTokenRepository(); // Exemple avec HttpSessionCsrfTokenRepository
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth, UserService userService, PasswordEncoder passwordEncoder) throws Exception {
+        auth
+                .userDetailsService(userService)
+                .passwordEncoder(passwordEncoder);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\EvaluationService.java
+
+package com.example.mysearch.service;
+import com.example.mysearch.model.Evaluation;
+import com.example.mysearch.repository.EvaluationRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+@Service
+public class EvaluationService {
+    private final EvaluationRepository evaluationRepository;
+
+    public EvaluationService(EvaluationRepository evaluationRepository) {
+        this.evaluationRepository = evaluationRepository;
+    }
+
+    public Iterable<Evaluation> getAllEvaluations() {
+        return evaluationRepository.findAll();
+    }
+
+    public Evaluation getEvaluationById(Long id) {
+        return evaluationRepository.findById(String.valueOf(id)).orElse(null);
+    }
+
+    public Evaluation createEvaluation(Evaluation evaluation) {
+        return evaluationRepository.save(evaluation);
+    }
+
+    public Evaluation updateEvaluation(Long id, Evaluation evaluation) {
+        return evaluationRepository.save(evaluation);
+    }
+
+    public void deleteEvaluation(Long id) {
+        evaluationRepository.deleteById(String.valueOf(id));
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\HistoryService.java
+
+package com.example.mysearch.service;
+
+import com.example.mysearch.model.History;
+import com.example.mysearch.repository.HistoryRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+@Service
+public class HistoryService {
+    private final HistoryRepository historyRepository;
+
+    public HistoryService(HistoryRepository historyRepository) {
+        this.historyRepository = historyRepository;
+    }
+
+    public History getHistoryByUserId(String userId) {
+        return historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
+    }
+
+    public void addSearchToHistory(String userId, String keyword) {
+        History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
+        history.getSearchCount().put(keyword, history.getSearchCount().getOrDefault(keyword, 0) + 1);
+        historyRepository.save(history);
+    }
+
+    public void addSerieClick(String userId, String serieId) {
+        History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
+        history.getClickCount().put(serieId, history.getClickCount().getOrDefault(serieId, 0) + 1);
+        historyRepository.save(history);
+    }
+
+    public void addSerieLike(String userId, String serieName) {
+        History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
+        if (!history.getSerieLike().contains(serieName)) {
+            history.getSerieLike().add(serieName);
+        }
+        historyRepository.save(history);
+    }
+
+    public void addSerieDislike(String userId, String serieName) {
+        History history = historyRepository.findByUtilisateurId(userId).orElse(new History(userId));
+        if (!history.getSerieDislike().contains(serieName)) {
+            history.getSerieDislike().add(serieName);
+        }
+        historyRepository.save(history);
+    }
+
+    public boolean hasUserClickedOnSerie(String id, String serieId) {
+        History history = historyRepository.findByUtilisateurId(id).orElse(null);
+        if (history == null) {
+            return false;
+        }
+
+        return history.getClickCount().containsKey(serieId);
+    }
+
+    public List<History> getAllHistoryRecords() {
+        return historyRepository.findAll();
+    }
+
+    public History createHistoryRecord(History historyRecord) {
+        return historyRepository.save(historyRecord);
+    }
+
+    public History updateHistoryRecord(String id, History historyRecord) {
+        History historyToUpdate = historyRepository.findByUtilisateurId(id).orElse(null);
+        if (historyToUpdate != null) {
+            historyToUpdate.setUtilisateurId(historyRecord.getUtilisateurId());
+            historyToUpdate.setSearchCount(historyRecord.getSearchCount());
+            historyToUpdate.setClickCount(historyRecord.getClickCount());
+            historyToUpdate.setSerieLike(historyRecord.getSerieLike());
+            historyToUpdate.setSerieDislike(historyRecord.getSerieDislike());
+            return historyRepository.save(historyToUpdate);
+        }
+        return null;
+    }
+
+    public void deleteHistoryRecord(String id) {
+        historyRepository.deleteByUtilisateurId(id);
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\SearchService.java
+
+package com.example.mysearch.service;
+
+import com.example.mysearch.model.Series;
+import com.example.mysearch.repository.SerieRepository;
+import com.example.mysearch.utils.TFIDFCalculator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class SearchService {
+    private final SerieRepository serieRepository;
+    private final TFIDFCalculator tfidfCalculator;
+
+    @Autowired
+    public SearchService(SerieRepository serieRepository, TFIDFCalculator tfidfCalculator) {
+        this.serieRepository = serieRepository;
+        this.tfidfCalculator = tfidfCalculator;
+    }
+
+    public List<Series> searchSeriesByKeyword(String keyword) {
+        List<Series> allSeries = serieRepository.findAll();
+        return allSeries.stream()
+                .filter(serie -> {
+                    Map<String, Double> tfidfVectors = serie.getVecteursTFIDF();
+                    return tfidfVectors != null && tfidfVectors.containsKey(keyword) && tfidfVectors.get(keyword) > 0;
+                })
+                .sorted((serie1, serie2) -> {
+                    double score1 = serie1.getVecteursTFIDF().get(keyword);
+                    double score2 = serie2.getVecteursTFIDF().get(keyword);
+                    return Double.compare(score2, score1);
+                })
+                .collect(Collectors.toList());
+    }
+
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\SerieService.java
+
+package com.example.mysearch.service;
+import com.example.mysearch.model.History;
+import com.example.mysearch.model.Series;
+import com.example.mysearch.model.SeriesSimilarity;
+import com.example.mysearch.model.User;
+import com.example.mysearch.repository.SerieRepository;
+import com.example.mysearch.repository.SeriesSimilarityRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+@Service
+public class SerieService {
+    private final SerieRepository serieRepository;
+    private final SeriesSimilarityRepository seriesSimilarityRepository;
+    private final HistoryService historyService;
+    private final UserService userService;
+    private static final Logger logger = LoggerFactory.getLogger(SerieService.class);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+    @Autowired
+    public SerieService(SerieRepository serieRepository, SeriesSimilarityRepository seriesSimilarityRepository, HistoryService historyService, UserService userService) {
+        this.serieRepository = serieRepository;
+        this.seriesSimilarityRepository = seriesSimilarityRepository;
+        this.historyService = historyService;
+        this.userService = userService;
+    }
+
+    public Iterable<Series> getAllSeries() {
+        return serieRepository.findAll();
+    }
+
+    public Series getSerieById(String serieId) {
+        return serieRepository.findById(serieId).orElse(null);
+    }
+
+    public Series addSerie(Series serie) {
+        return serieRepository.save(serie);
+    }
+
+    public void deleteSerie(String serieId) {
+        serieRepository.deleteById(serieId);
+    }
+    public Iterable<Series> searchSeriesByKeyword(String keyword) {
+        String[] keywords = keyword.split("\\s+"); // Divisez la chaîne en mots clés
+        List<Series> allSeries = serieRepository.findAll();
+
+        // Calcul des scores TFIDF pour chaque série basé sur tous les mots clés
+        return allSeries.stream() // Pour chaque série
+                .map(serie -> new AbstractMap.SimpleEntry<>( // série deviens une entrée de la map
+                        serie, // clé = série
+                        Arrays.stream(keywords) // flux de mots clés
+                                .mapToDouble(key -> serie.getVecteursTFIDF().getOrDefault(key.toLowerCase(), 0.0)) // pour chaque mot clé, récupérez le score TFIDF de la série
+                                .sum() // somme des scores TFIDF
+                ))
+                .filter(entry -> entry.getValue() > 0) // Filtrez les séries avec un score > 0
+                .sorted(Map.Entry.<Series, Double>comparingByValue().reversed())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+    public Iterable<Series> searchSeriesByName(String name) {
+        // si le nom est dans la base de données on retourne la série
+        if (serieRepository.existsByTitre(name)) {
+            return serieRepository.findByTitre(name);
+        }
+        return serieRepository.findByTitre(name);
+    }
+    public Series getSerieByTitle(String serieName) {
+        return serieRepository.findByTitre(serieName).get(0);
+    }
+    public List<Series> getRecommendedSeries(String userId) {
+        // Récupérer l'historique de l'utilisateur
+        History userHistory = historyService.getHistoryByUserId(userId);
+        if (userHistory == null) {
+            return Collections.emptyList();
+        }
+
+        // Récupérer les séries que l'utilisateur a aimées
+        List<String> userLikes = userHistory.getSerieLike();
+
+        // Récupérer tous les utilisateurs
+        List<User> allUsers = (List<User>) userService.getAllUsers();
+
+        // Créer une liste pour stocker les séries recommandées
+        List<Series> recommendedSeries = new ArrayList<>();
+
+        // Parcourir tous les utilisateurs
+        for (User user : allUsers) {
+            // Ne pas comparer l'utilisateur avec lui-même
+            if (!user.getId().equals(userId)) {
+                // Récupérer l'historique de l'autre utilisateur
+                History otherUserHistory = historyService.getHistoryByUserId(user.getId());
+                if (otherUserHistory == null) {
+                    continue;
+                }
+
+                // Récupérer les séries que l'autre utilisateur a aimées
+                List<String> otherUserLikes = otherUserHistory.getSerieLike();
+
+                // Parcourir les séries que l'autre utilisateur a aimées
+                for (String serieName : otherUserLikes) {
+                    // Si l'utilisateur n'a pas déjà aimé cette série et qu'il ne l'a pas déjà dislikée
+                    if (!userLikes.contains(serieName) && !userHistory.getSerieDislike().contains(serieName)) {
+                        // Ajouter la série à la liste des séries recommandées
+                        Series serie = getSerieByTitle(serieName);
+                        if (serie != null && !recommendedSeries.contains(serie)) {
+                            recommendedSeries.add(serie);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Trier les séries recommandées en fonction de leur score de recommandation
+        recommendedSeries.sort((s1, s2) -> Double.compare(getRecommendationScore(s2), getRecommendationScore(s1)));
+
+        // Retourner les séries recommandées
+        return recommendedSeries;
+    }
+
+    private double getRecommendationScore(Series series) {
+        // Calculer le score de recommandation en fonction du nombre de "likes" et de "dislikes"
+        double likeScore = series.getLikes();
+        double dislikeScore = series.getDislikes();
+
+        // Vous pouvez ajuster ces poids en fonction de l'importance que vous accordez aux "likes" et aux "dislikes"
+        double likeWeight = 1.0;
+        double dislikeWeight = -0.5;
+
+        return likeScore * likeWeight + dislikeScore * dislikeWeight;
+    }
+
+    public void incrementLikeCount(String serieId) {
+        Series serie = getSerieById(serieId);
+        if (serie != null) {
+            serie.setLikes(serie.getLikes() + 1);
+            serieRepository.save(serie);
+        }
+    }
+
+    public void incrementDislikeCount(String serieId) {
+        Series serie = getSerieById(serieId);
+        if (serie != null) {
+            serie.setDislikes(serie.getDislikes() + 1);
+            serieRepository.save(serie);
+        }
+    }
+    public void incrementViewCount(String serieId) {
+        Series serie = getSerieById(serieId);
+        if (serie != null) {
+            serie.setViews(serie.getViews() + 1);
+            serieRepository.save(serie);
+        }
+    }
+    public double cosineSimilarity(Map<String, Double> vectorA, Map<String, Double> vectorB) {
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+        for (String key : vectorA.keySet()) {
+            dotProduct += vectorA.get(key) * vectorB.getOrDefault(key, 0.0);
+            normA += Math.pow(vectorA.get(key), 2);
+        }
+        for (double value : vectorB.values()) {
+            normB += Math.pow(value, 2);
+        }
+        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
+    public void calculateSeriesSimilarities() {
+        if (seriesSimilarityRepository.count() > 0) {
+            return;
+        }
+        List<Series> seriesList = serieRepository.findAll();
+        Map<Pair<Series, Series>, Double> similarities = new ConcurrentHashMap<>();
+
+        for (int i = 0; i < seriesList.size(); i++) {
+            for (int j = i + 1; j < seriesList.size(); j++) {
+                int finalI = i;
+                int finalJ = j;
+                executorService.submit(() -> {
+                    double similarity = cosineSimilarity(seriesList.get(finalI).getVecteursTFIDF(), seriesList.get(finalJ).getVecteursTFIDF());
+                    // Stockez cette valeur de similarité pour une utilisation ultérieure
+                    similarities.put(new Pair<>(seriesList.get(finalI), seriesList.get(finalJ)), similarity);
+                    // Stockez cette valeur de similarité dans la base de données
+                    saveSimilarityToDatabase(seriesList.get(finalI), seriesList.get(finalJ), similarity);
+                });
+            }
+        }
+    }
+
+    public void saveSimilarityToDatabase(Series series1, Series series2, double similarity) {
+        SeriesSimilarity seriesSimilarity = new SeriesSimilarity();
+        seriesSimilarity.setSeries1Id(series1.getId());
+        seriesSimilarity.setSeries2Id(series2.getId());
+        seriesSimilarity.setSimilarity(similarity);
+        seriesSimilarityRepository.save(seriesSimilarity);
+    }
+    public List<Series> getSimilarSeries(String seriesId) {
+        logger.info("Entrée dans getSimilarSeries avec seriesId: {}", seriesId);
+        try {
+            Series series = serieRepository.findById(seriesId).orElse(null);
+            if (series == null) {
+                logger.error("Series avec id {} non trouvée", seriesId);
+                return Collections.emptyList();
+            }
+            logger.info("Series avec id {} trouvée", seriesId);
+
+            List<SeriesSimilarity> seriesSimilarities = seriesSimilarityRepository.findBySeries1IdOrSeries2Id(seriesId, seriesId);
+            if (seriesSimilarities.isEmpty()) {
+                logger.info("Aucune similarité trouvée pour seriesId: {}", seriesId);
+            } else {
+                logger.info("Nombre de similarités trouvées: {}", seriesSimilarities.size());
+            }
+
+            List<Series> similarSeriesList = new ArrayList<>();
+            for (SeriesSimilarity seriesSimilarity : seriesSimilarities) {
+                String similarSeriesId = seriesSimilarity.getSeries1Id().equals(seriesId) ? seriesSimilarity.getSeries2Id() : seriesSimilarity.getSeries1Id();
+                logger.debug("Traitement de la série similaire avec id: {}", similarSeriesId);
+                Series similarSeries = serieRepository.findById(similarSeriesId).orElse(null);
+                if (similarSeries != null) {
+                    similarSeriesList.add(similarSeries);
+                }
+            }
+
+            if (similarSeriesList.isEmpty()) {
+                logger.info("Aucune série similaire trouvée pour seriesId: {}", seriesId);
+            } else {
+                logger.info("Séries similaires trouvées pour seriesId {}: {}", seriesId, similarSeriesList);
+            }
+
+            return similarSeriesList;
+        } catch (Exception e) {
+            logger.error("Erreur dans getSimilarSeries: ", e);
+            return Collections.emptyList();
+        }
+    }
+
+
+    private double calculateSimilarity(Series series1, Series series2) {
+        System.out.println("Début de calculateSeriesSimilarities");
+        Map<String, Double> vector1 = series1.getVecteursTFIDF();
+        Map<String, Double> vector2 = series2.getVecteursTFIDF();
+
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+
+        for (String key : vector1.keySet()) {
+            dotProduct += vector1.get(key) * vector2.getOrDefault(key, 0.0);
+            normA += Math.pow(vector1.get(key), 2);
+        }
+
+        for (double value : vector2.values()) {
+            normB += Math.pow(value, 2);
+        }
+
+        double similarity = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+
+        logger.info("Calculated similarity between series {} and {}: {}", series1.getTitre(), series2.getTitre(), similarity);
+        System.out.println("Fin de calculateSeriesSimilarities");
+        return similarity;
+    }
+
+    public List<Series> recommendSeries(String userId) {
+        logger.info("Début de la recommandation pour l'utilisateur {}", userId);
+        User user = userService.findById(userId);
+        if (user == null) {
+            logger.warn("Utilisateur avec id {} non trouvé", userId);
+            return Collections.emptyList();
+        }
+        logger.info("Utilisateur {} trouvé", userId);
+
+        History userHistory = historyService.getHistoryByUserId(userId);
+        if (userHistory == null) {
+            logger.warn("Aucun historique trouvé pour l'utilisateur {}", userId);
+            return Collections.emptyList();
+        }
+        logger.info("Historique trouvé pour l'utilisateur {}", userId);
+
+        List<String> likedSeries = userHistory.getSerieLike();
+        if (likedSeries.isEmpty()) {
+            logger.info("L'utilisateur {} n'a pas encore aimé de séries", userId);
+            return Collections.emptyList();
+        }
+        logger.info("L'utilisateur {} a aimé des séries", userId);
+        logger.info("Recommandation de séries en cours...");
+
+        List<Series> recommendedSeries = likedSeries.stream()
+                .map(this::getSerieById)
+                .filter(Objects::nonNull)
+                .peek(series -> logger.info("Traitement de la série avec l'id {}", series.getId()))
+                .flatMap(series -> {
+                    List<Series> similarSeries = getSimilarSeries(series.getId());
+                    if (similarSeries.isEmpty()) {
+                        logger.info("Aucune série similaire trouvée pour la série {} aimée par l'utilisateur {}", series.getId(), userId);
+                    } else {
+                        logger.info("Séries similaires trouvées pour la série {} aimée par l'utilisateur {}", series.getId(), userId);
+                    }
+                    return similarSeries.stream();
+                })
+                .distinct()
+                .collect(Collectors.toList());
+
+        logger.info("Recommandations générées pour l'utilisateur {}: {}", userId, recommendedSeries);
+        return recommendedSeries;
+    }
+
+    public void resetSeriesStats() {
+        List<Series> allSeries = serieRepository.findAll();
+        for (Series series : allSeries) {
+            series.setLikes(0);
+            series.setDislikes(0);
+            series.setViews(0);
+            serieRepository.save(series);
+        }
+    }
+
+    public class Pair<F, S> { // paire pour stocker les séries et leur similarité
+        private F first;
+        private S second;
+
+        public Pair(F first, S second) {
+            this.first = first;
+            this.second = second;
+        }
+
+        public F getFirst() {
+            return first;
+        }
+
+        public S getSecond() {
+            return second;
+        }
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\SignupService.java
+
+package com.example.mysearch.service;
+
+import com.example.mysearch.model.User;
+import com.example.mysearch.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+
+@Service
+public class SignupService {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public void enregistrer(String username, String email, String password) {
+        System.out.println("Enregistrement utilisateur : " + username);
+        User newUser = new User();
+        newUser.setName(username);
+        newUser.setEmail(email);
+        newUser.setPassword(passwordEncoder.encode(password));
+        userRepository.save(newUser);
+    }
+
+    public boolean userExists(String name) {
+        return userRepository.existsByName(name);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\service\UserService.java
+
+package com.example.mysearch.service;
+import com.example.mysearch.model.User;
+import com.example.mysearch.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+@Service
+public class UserService implements UserDetailsService {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+
+    public UserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findById(String.valueOf(id)).orElse(null);
+    }
+
+    public User createUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+    }
+    public User findById(String id) {
+        return userRepository.findById(id).orElse(null);
+    }
+
+    public void deleteUser(Long id) {
+        userRepository.deleteById(String.valueOf(id));
+    }
+    public void deleteUser(String id){
+        userRepository.deleteById(id);
+    }
+
+    public User updateUser(Long id, User user) {
+        User userToUpdate = userRepository.findById(String.valueOf(id)).orElse(null);
+        if (userToUpdate != null) {
+            userToUpdate.setName(user.getName());
+            userToUpdate.setEmail(user.getEmail());
+            userToUpdate.setPassword(passwordEncoder.encode(user.getPassword()));
+            userToUpdate.setHistoriqueRecherches(user.getHistoriqueRecherches());
+            return userRepository.save(userToUpdate);
+        }
+        return null;
+    }
+
+    public Iterable<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        if (username == null || username.trim().isEmpty()) {
+            throw new UsernameNotFoundException("Username is empty");
+        }
+        User user = userRepository.findByName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+
+        return org.springframework.security.core.userdetails.User
+                .withUsername(user.getName())
+                .password(user.getPassword())
+                .authorities("USER") // or any roles you have
+                .build();
+    }
+
+    public void removeUserFromDatabase(String username) {
+        userRepository.deleteByName(username);
+    }
+    public void addSearchToHistory(String name,String search) {
+        userRepository.addSearchToHistory(name,search);
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByName(username).orElse(null);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\main\java\com\example\mysearch\utils\TFIDFCalculator.java
+
+package com.example.mysearch.utils;
+
+import com.example.mysearch.config.MySpringConfiguration;
+import com.example.mysearch.model.Series;
+import com.example.mysearch.repository.SerieRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.text.Normalizer;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.stereotype.Component;
+@Component
+public class TFIDFCalculator {
+    private final Map<String, Double> idfCache;
+    private final SerieRepository serieRepository;
+    @Autowired
+    public TFIDFCalculator(SerieRepository serieRepository) {
+        idfCache = new HashMap<>();
+        this.serieRepository = serieRepository;
+    }
+    // Call this method when your corpus changes to update the IDF values
+    public void updateIdfCache(List<List<String>> docs) {
+        Set<String> uniqueTerms = new HashSet<>();
+        docs.forEach(uniqueTerms::addAll);
+        uniqueTerms.forEach(term -> idfCache.put(term, idf(docs, term)));
+    }
+
+    private double tf(List<String> doc, String term) {
+        long count = doc.stream().filter(term::equalsIgnoreCase).count();
+        return (double) count / doc.size();
+    }
+
+    private double idf(List<List<String>> docs, String term) {
+        long count = docs.stream().filter(doc -> doc.contains(term.toLowerCase())).count();
+        if (count == 0) return 0;
+        return Math.log((double) docs.size() / count);
+    }
+
+    public double tfIdf(List<String> doc, String term) {
+        // Use cached IDF value if available
+        double termIdf = idfCache.containsKey(term) ? idfCache.get(term) : idf(Collections.singletonList(doc), term);
+        return tf(doc, term) * termIdf;
+    }
+    public List<Map<String, Object>> readJsonFile(String jsonFilePath) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(new File(jsonFilePath), new TypeReference<List<Map<String, Object>>>() {});
+    }
+
+    public List<Map<String, Object>> findTopSeries(List<String> terms, int n) {
+        List<Series> seriesList = serieRepository.findAll();
+        List<Map<String, Object>> seriesSimilarities = new ArrayList<>();
+
+        for (Series serie : seriesList) {
+            double cumulativeTfidfScore = terms.stream()
+                    .mapToDouble(term -> serie.getVecteursTFIDF().getOrDefault(term.toLowerCase(), 0.0))
+                    .sum();
+
+            if (cumulativeTfidfScore > 0) {
+                Map<String, Object> seriesWithSimilarity = new HashMap<>();
+                seriesWithSimilarity.put("title", serie.getTitre());
+                seriesWithSimilarity.put("similarity", cumulativeTfidfScore);
+                seriesSimilarities.add(seriesWithSimilarity);
+            }
+        }
+
+        return seriesSimilarities.stream()
+                .sorted(Comparator.comparingDouble((Map<String, Object> series) -> (Double) series.get("similarity")).reversed())
+                .limit(n)
+                .collect(Collectors.toList());
+    }
+    public static List<String> removeAccents(List<String> searchTerms) {
+        return searchTerms.stream()
+                .map(term -> Normalizer.normalize(term, Normalizer.Form.NFD))
+                .map(term -> term.replaceAll("[\\p{InCombiningDiacriticalMarks}]", ""))
+                .collect(Collectors.toList());
+    }
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MySpringConfiguration.class);
+        TFIDFCalculator calculator = context.getBean(TFIDFCalculator.class);
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\ConnexionTest.java
+
+package com.example.mysearch;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+@SpringBootTest
+@AutoConfigureMockMvc
+class ConnexionTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    // This method will be called before each test execution
+    @BeforeEach
+
+    @Test
+    void validUserShouldLoginSuccessfully() throws Exception {
+        // Créez d'abord une inscription
+        mockMvc.perform(post("/inscription")
+                        .param("name", "validUser")
+                        .param("password", "validPassword")
+                        .param("email", "validuser@example.com"))
+                .andExpect(status().is3xxRedirection()) // Vous attendez une redirection après une inscription réussie
+                .andExpect(redirectedUrl("/login")); // Assurez-vous que cette URL correspond à celle attendue après l'inscription
+
+        // Ensuite, tentez de vous connecter avec l'utilisateur créé
+        mockMvc.perform(post("/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("username", "validUser")
+                        .param("password", "validPassword"))
+                .andExpect(status().is3xxRedirection()) // Vous attendez une redirection après une connexion réussie
+                .andExpect(redirectedUrl("/index")); // Assurez-vous que cette URL correspond à celle attendue après la connexion réussie
+    }
+
+    @Test
+    void invalidUserShouldNotLogin() throws Exception {
+        mockMvc.perform(post("/login")
+                        .param("username", "invalidUser")
+                        .param("password", "invalidPassword"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?error=true")); // Replace with the expected redirect URL after failed login
+    }
+
+    @Test
+    void validUserWithWrongPasswordShouldNotLogin() throws Exception {
+        mockMvc.perform(post("/login")
+                        .param("username", "validUser")
+                        .param("password", "wrongPassword"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?error=true"));
+    }
+
+    @Test
+    void shouldRedirectAfterSuccessfulLogin() throws Exception {
+        mockMvc.perform(post("/login")
+                        .param("username", "validUser")
+                        .param("password", "validPassword"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/")); // Adjust the redirect URL as per your application's flow
+    }
+
+    @Test
+    void shouldRedirectAfterFailedLogin() throws Exception {
+        mockMvc.perform(post("/login")
+                        .param("username", "validUser")
+                        .param("password", "wrongPassword"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?error=true"));
+    }
+
+    @Test
+    @WithMockUser
+    void userShouldLogoutSuccessfully() throws Exception {
+        mockMvc.perform(post("/logout"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?logout")); // Adjust the redirect URL to the expected URL after logout
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\DBRegisterTest.java
+
+package com.example.mysearch;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+class DBRegisterTest {
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setup() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    }
+
+    @Test
+    void successfulRegistration() throws Exception {
+        mockMvc.perform(post("/inscription")
+                        .param("name", "realUser")
+                        .param("password", "realPassword")
+                        .param("email", "realuser@example.com"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    // Vous pouvez ajouter d'autres tests si nécessaire
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\DeleteUserTest.java
+
+package com.example.mysearch;
+
+public class DeleteUserTest {
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\HistoryTest.java
+
+package com.example.mysearch;
+
+import com.example.mysearch.model.History;
+import com.example.mysearch.repository.HistoryRepository;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import java.util.HashMap;
+import java.util.Map;
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DataMongoTest
+public class HistoryTest {
+
+    @Autowired
+    private HistoryRepository historyRepository;
+
+    @Test
+    public void testAddHistoryToDatabase() {
+        // Create a new history object
+        History history = new History();
+        history.setUtilisateurId("user123");
+
+        Map<String, Integer> searchCount = new HashMap<>();
+        searchCount.put("search1", 1);
+        history.setSearchCount(searchCount);
+
+        Map<String, Integer> clickCount = new HashMap<>();
+        clickCount.put("serie123", 1);
+        history.setClickCount(clickCount);
+
+        // Save the history to the database
+        History savedHistory = historyRepository.save(history);
+
+        // Verify that the history is saved successfully
+        assertThat(savedHistory.getId()).isNotNull();
+        assertThat(savedHistory.getUtilisateurId()).isEqualTo("user123");
+        assertThat(savedHistory.getSearchCount()).containsEntry("search1", 1);
+        assertThat(savedHistory.getClickCount()).containsEntry("serie123", 1);
+    }
+}
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\MySearchApplicationTests.java
+
+package com.example.mysearch;
+
+import com.example.mysearch.model.Series;
+import com.example.mysearch.repository.SerieRepository;
+import com.example.mysearch.utils.TFIDFCalculator;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+class MySearchApplicationTests {
+
+    @Autowired // injecte le bean dans le test
+    private SerieRepository serieRepository;
+    @Autowired
+    private TFIDFCalculator tfidfCalculator;
+
+
+    @Test
+    void shouldFetchData() {
+        String expectedTitle = "breakingbad";
+
+
+        List<Series> series = serieRepository.findByTitre(expectedTitle);
+
+
+        assertThat(series).isNotEmpty();
+        assertThat(series.get(0).getTitre()).isEqualTo(expectedTitle);
+    }
+    @Test
+    void tfidfScoreForBreakingBadShouldBeHighestForMeth() {
+        // Given
+        String keyword = "meth";
+        String expectedTopTitle = "breakingbad";
+
+        // When
+        List<Map<String, Object>> topSeries = tfidfCalculator.findTopSeries(Collections.singletonList(keyword), 10);
+
+        // Then
+        assertThat(topSeries).isNotEmpty();
+        assertThat(topSeries.get(0)).containsEntry("title", expectedTopTitle);
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\RegisterTest.java
+
+package com.example.mysearch;
+
+import com.example.mysearch.service.SignupService;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.when;
+@SpringBootTest
+@AutoConfigureMockMvc
+class RegisterTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private SignupService signupService;
+
+
+    @Test
+    void successfulRegistration() throws Exception {
+        mockMvc.perform(post("/inscription")
+                        .param("name", "newUser")
+                        .param("password", "newPassword")
+                        .param( "email", "newuser@example.com"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login")); // Assuming the user is redirected to the login page after successful registration
+    }
+
+
+    @Test
+    public void registrationWithExistingUsername() throws Exception {
+        // Set up the test data
+        String existingUsername = "testuser";
+        String newEmail = "newuser@example.com";
+        String newPassword = "newuserpassword";
+
+        // Mock the behavior of the service
+        when(signupService.userExists(existingUsername)).thenReturn(true); // quand userExists est appelé avec existingUsername, retourne true.
+
+        // Perform the registration request
+        mockMvc.perform(post("/inscription") // on simule une inscription avec un nom d'utilisateur existant
+                        .param("name", existingUsername)
+                        .param("email", newEmail)
+                        .param("password", newPassword))
+
+                // Check the response status and view name
+                .andExpect(status().isBadRequest()) // on vérifie que le status est bien 400
+                .andExpect(view().name("signup")) // on vérifie que la vue est bien signup (le fichier signup.html)
+
+                // Check for the expected error message
+                .andExpect(model().attributeHasFieldErrors("user", "name"))
+                .andExpect(model().attributeHasFieldErrorCode("user", "name", "error.user"));
+    }
+}
+
+
+--------------------------------------------------------------------------------
+
+File: C:\Users\Baran\IdeaProjects\mySsearch\src\test\java\com\example\mysearch\SecurityConfigTest.java
+
+package com.example.mysearch;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.security.web.server.csrf.CsrfToken;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class SecurityConfigTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    void accessUnsecuredResourceShouldSucceed() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void accessSecuredResourceUnauthenticatedShouldRedirectToLogin() throws Exception {
+        mockMvc.perform(get("/admin"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void accessSecuredResourceAsUserShouldFail() throws Exception {
+        mockMvc.perform(get("/admin"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void accessSecuredResourceAsAdminShouldSucceed() throws Exception {
+        mockMvc.perform(get("/admin"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void loginWithValidCsrfTokenShouldSucceed() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get("/login"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Extract the CsrfToken object from the request attribute
+        CsrfToken csrfToken = (CsrfToken) mvcResult.getRequest().getAttribute(CsrfToken.class.getName());
+
+        // Now we can use the token value in the subsequent POST request
+        mockMvc.perform(post("/login")
+                        .param("username", "user")
+                        .param("password", "password")
+                        .param(csrfToken.getParameterName(), csrfToken.getToken()))
+                .andExpect(status().is3xxRedirection());
+    }
+
+
+
+    @Test
+    void loginWithInvalidCsrfTokenShouldFail() throws Exception {
+        mockMvc.perform(post("/login").with(SecurityMockMvcRequestPostProcessors.csrf().useInvalidToken())
+                        .param("username", "user")
+                        .param("password", "password"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void loginWithValidUserShouldSucceed() throws Exception {
+        mockMvc.perform(post("/login")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()) // This will add the CSRF token
+                        .param("username", "user")
+                        .param("password", "password"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/accueil")); // assuming you redirect to "/accueil" on success
+    }
+
+}
+
+
+--------------------------------------------------------------------------------
+

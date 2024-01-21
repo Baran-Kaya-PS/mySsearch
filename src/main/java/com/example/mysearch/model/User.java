@@ -12,6 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Représente un utilisateur dans le système.
+ */
 @Data
 @Document(collection = "users")
 public class User {
@@ -49,6 +52,11 @@ public class User {
         this.evaluations = evaluations;
     }
 
+    /**
+     * Ajoute une évaluation à l'utilisateur.
+     * Si la liste des évaluations est nulle, elle est initialisée.
+     * @param evaluation l'évaluation à ajouter
+     */
     public void addEvaluation(Evaluation evaluation) {
         if (this.evaluations == null) {
             this.evaluations = new HashMap<String, Boolean>();

@@ -16,23 +16,39 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.net.URI;
 
+/**
+ * Cette classe est le contrôleur responsable de la gestion des inscriptions des utilisateurs.
+ */
 @Controller
 public class SignupController {
     @Autowired
     private SignupService signupService;
 
+    /**
+     * Affiche le formulaire d'inscription.
+     *
+     * @return le nom de la page d'inscription
+     */
     @GetMapping("/inscription")
     public String inscriptionForm() {
         return "signup"; // retourne la page d'inscription
     }
 
+    /**
+     * Traite la soumission du formulaire d'inscription.
+     *
+     * @param user           l'utilisateur à inscrire
+     * @param bindingResult  le résultat de la validation des champs du formulaire
+     * @param response       la réponse HTTP
+     * @return le modèle et la vue correspondant à la redirection après l'inscription
+     */
     @PostMapping("/inscription")
     public ModelAndView inscriptionSubmit(@Valid User user, BindingResult bindingResult, HttpServletResponse response) {
         ModelAndView modelAndView = new ModelAndView();
 
         if (signupService.userExists(user.getName())) {
             bindingResult.rejectValue("name", "error.user", "Ce nom d'utilisateur existe déjà");
-            response.setStatus(HttpStatus.BAD_REQUEST.value()); // Set the HTTP status here.
+            response.setStatus(HttpStatus.BAD_REQUEST.value()); // Définit le statut HTTP ici.
             modelAndView.addObject("user", user);
             modelAndView.setViewName("signup");
             return modelAndView;

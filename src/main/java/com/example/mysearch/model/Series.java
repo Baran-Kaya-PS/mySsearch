@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Représente une série.
+ */
 @Data
 @Document(collection = "series")
 public class Series {
@@ -27,15 +30,30 @@ public class Series {
     private int views;
     private Map<String, List<String>> similarSeriesCache = new HashMap<>();
 
+    /**
+     * Constructeur par défaut.
+     */
     public Series() {
     }
 
+    /**
+     * Constructeur avec paramètres.
+     *
+     * @param id             l'identifiant de la série
+     * @param titre          le titre de la série
+     * @param vecteursTFIDF  les vecteurs TF-IDF de la série
+     */
     public Series(String id, String titre, Map<String, Double> vecteursTFIDF) {
         this.id = id;
         this.titre = titre;
         this.vecteursTFIDF = vecteursTFIDF;
     }
 
+    /**
+     * Retourne une représentation sous forme de chaîne de caractères de la série.
+     *
+     * @return la représentation de la série
+     */
     @Override
     public String toString() {
         return "Serie{" +

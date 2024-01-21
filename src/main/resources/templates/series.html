@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accueil</title>
+    <title>Series</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body, html {
@@ -42,68 +42,55 @@
             padding-top: 20px; /* Augmente l'espace au-dessus des liens */
             padding-bottom: 20px; /* Augmente l'espace en dessous des liens */
         }
+        .series-item img {
+            width: 150px;  /* Adjust as needed */
+            height: auto;
+            object-fit: cover;
+            margin: 10px;
+        }
     </style>
 </head>
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand bg-light" href="#">MySearch</a>
+    <a class="navbar-brand bg-light" href="/api/home">Home</a>
     <div class="collapse navbar-collapse">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="nav-link" href="/api/serie/recommendations">Recommandations</a>
+                <a class="nav-link" href="/api/home">Accueil</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/api/history/user">Historique</a>
+                <a class="nav-link" href="/api/history/user">History</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/api/serie/all">Séries</a>
-            </li>
-        </ul>
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <a class="nav-link" th:text="${#authentication.name}">NomUtilisateur</a>
-            </li>
-            <li class="nav-item">
-                <form th:action="@{/logout}" method="post">
-                    <button type="submit" class="btn btn-outline-danger">Déconnexion</button>
-                </form>
+                <a class="nav-link" href="/api/serie/recommendations">Recommendations</a>
             </li>
         </ul>
     </div>
 </nav>
 
-
 <div class="container">
-    <form th:action="@{/api/serie/search}" method="get" class="search-bar d-flex flex-column align-items-center">
-        <label>
-            <input type="text" th:name="keyword" class="form-control" placeholder="Recherchez une série">
-        </label>
-        <button type="submit" class="btn btn-outline-primary mt-2">Rechercher</button>
-    </form>
-
-    <h2 class="text-center mt-5">Séries Recommandées Pour Vous</h2>
-
+    <h2 class="text-center mt-5">All Series</h2>
     <div class="row text-center mt-4">
-        <div class="row text-center mt-4">
-            <div th:each="serie : ${series}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <a th:href="@{/api/serie/click(serieId=${serie.id})}">
-                <img th:src="@{/image/{serieName}.jpg(serieName=${serie.titre})}" alt="Image de la série" class="img-fluid">
-                    <p class="mt-2" th:text="${serie.titre}">Nom de la série</p>
-                </a>
-            </div>
+        <div th:each="series : ${series}" class="series-item">
+            <a th:href="@{'/api/serie/click?serieId=' + ${series.id}}">
+                <img th:src="@{'/image/' + ${series.getTitre()} + '.jpg'}" alt="Image not found" onerror="this.onerror=null; this.src='/image/default.jpg';"/>
+                <p th:text="${series.titre}"></p>
+                <p>Likes: <span th:text="${series.likes}"></span></p>
+                <p>Dislikes: <span th:text="${series.dislikes}"></span></p>
+                <p>Views: <span th:text="${series.views}"></span></p>
+            </a>
         </div>
     </div>
 </div>
 
 <footer class="footer mt-5 py-3 bg-secondary">
     <div class="container">
-        <span class="text-muted"></span>
+        <!-- ... existing footer ... -->
     </div>
 </footer>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-</div>
 </body>
 </html>

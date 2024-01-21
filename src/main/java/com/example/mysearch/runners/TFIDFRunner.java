@@ -11,6 +11,11 @@ import java.util.Map;
 
 import static java.util.Arrays.*;
 
+/**
+    * Constructeur de la classe TFIDFRunner.
+    * 
+    * @param calculator le calculateur TF-IDF utilisé pour trouver les séries les plus pertinentes
+    */
 @Component
 public class TFIDFRunner implements CommandLineRunner {
 

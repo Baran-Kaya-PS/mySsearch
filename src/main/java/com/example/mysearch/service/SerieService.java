@@ -16,6 +16,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+/**
+ * Service de gestion des séries.
+ * Ce service permet de gérer les opérations liées aux séries telles que la recherche, l'ajout, la suppression, etc.
+ * Il fournit également des fonctionnalités de recommandation de séries basées sur l'historique de l'utilisateur.
+ */
 @Service
 public class SerieService {
     private final SerieRepository serieRepository;
@@ -34,46 +39,70 @@ public class SerieService {
     // Cache pour les similarités de séries
     private final Map<Pair<Series, Series>, Double> seriesSimilaritiesCache = new ConcurrentHashMap<>();
 
-    @Autowired
+    /**
+     * Constructeur du service de gestion des séries.
+     */
+    @Autowired // signifie que Spring va automatiquement injecter les dépendances nécessaires à ce service
     public SerieService(SerieRepository serieRepository, SeriesSimilarityRepository seriesSimilarityRepository, HistoryService historyService, UserService userService) {
         this.serieRepository = serieRepository;
         this.seriesSimilarityRepository = seriesSimilarityRepository;
         this.historyService = historyService;
         this.userService = userService;
     }
-
+    /**
+     * Récupère toutes les séries.
+     * @return  la liste de toutes les séries
+     */
     public Iterable<Series> getAllSeries() {
         return serieRepository.findAll();
     }
-
+    /**
+     * Récupère une série par son ID.
+     * @param serieId   l'ID de la série à récupérer
+     */
     public Series getSerieById(String serieId) {
         return serieRepository.findById(serieId).orElse(null);
     }
-
+    /**
+     * Ajoute une série.
+     * @param serie la série à ajouter
+     */
     public Series addSerie(Series serie) {
         return serieRepository.save(serie);
     }
-
+    /**
+     * Met à jour une série.
+     * @param serieId   l'ID de la série à mettre à jour
+     */
     public void deleteSerie(String serieId) {
         serieRepository.deleteById(serieId);
     }
+    /**
+     * Cherche les séries par mot-clé.
+     * @param keyword   le mot-clé de recherche
+     * @return          la liste des séries correspondantes, triées par score décroissant
+     */
     public Iterable<Series> searchSeriesByKeyword(String keyword) {
-        String[] keywords = keyword.split("\\s+"); // Divisez la chaîne en mots clés
+        String[] keywords = keyword.split("\\s+");
         List<Series> allSeries = serieRepository.findAll();
 
-        // Calcul des scores TFIDF pour chaque série basé sur tous les mots clés
-        return allSeries.stream() // Pour chaque série
-                .map(serie -> new AbstractMap.SimpleEntry<>( // série deviens une entrée de la map
-                        serie, // clé = série
+        return allSeries.stream()
+                .map(serie -> new AbstractMap.SimpleEntry<>(
+                        serie,
                         Arrays.stream(keywords) // flux de mots clés
-                                .mapToDouble(key -> serie.getVecteursTFIDF().getOrDefault(key.toLowerCase(), 0.0)) // pour chaque mot clé, récupérez le score TFIDF de la série
+                                .mapToDouble(key -> serie.getVecteursTFIDF().getOrDefault(key.toLowerCase(), 0.0))
                                 .sum() // somme des scores TFIDF
                 ))
-                .filter(entry -> entry.getValue() > 0) // Filtrez les séries avec un score > 0
+                .filter(entry -> entry.getValue() > 0)
                 .sorted(Map.Entry.<Series, Double>comparingByValue().reversed())
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
+    /**
+     * Cherche les séries par nom.
+     * @param name   le nom de la série à rechercher
+     * @return          la liste des séries correspondantes, triées par score décroissant
+     */
     public Iterable<Series> searchSeriesByName(String name) {
         // si le nom est dans la base de données on retourne la série
         if (serieRepository.existsByTitre(name)) {
@@ -81,43 +110,44 @@ public class SerieService {
         }
         return serieRepository.findByTitre(name);
     }
+    /**
+     * Cherche les séries par genre.
+     * @param genre   le genre de la série à rechercher
+     * @return          la liste des séries correspondantes, triées par score décroissant
+     */
     public Series getSerieByTitle(String serieName) {
         return serieRepository.findByTitre(serieName).get(0);
     }
+    /**
+     * Cherche les séries par genre.
+     * @param genre   le genre de la série à rechercher
+     * @return          la liste des séries correspondantes, triées par score décroissant
+     */
     public List<Series> getRecommendedSeries(String userId) {
-        // Vérifiez si les recommandations pour cet utilisateur sont déjà en cache
         if (recommendationCache.containsKey(userId)) {
             return recommendationCache.get(userId);
         }
 
-        // Sinon, calculez les recommandations
         List<Series> recommendedSeries = calculateRecommendedSeries(userId);
 
-        // Mettez les recommandations en cache pour une utilisation ultérieure
         recommendationCache.put(userId, recommendedSeries);
 
         return recommendedSeries;
     }
 
-    private List<Series> calculateRecommendedSeries(String userId) {
-        // Récupérer l'historique de l'utilisateur
+    public List<Series> calculateRecommendedSeries(String userId) {
         History userHistory = historyService.getHistoryByUserId(userId);
         if (userHistory == null) {
             return Collections.emptyList();
         }
 
-        // Récupérer les séries que l'utilisateur a aimées
         List<String> userLikes = userHistory.getSerieLike();
 
-        // Récupérer tous les utilisateurs
         List<User> allUsers = (List<User>) userService.getAllUsers();
 
-        // Créer une liste pour stocker les séries recommandées
         List<Series> recommendedSeries = Collections.synchronizedList(new ArrayList<>());
 
-        // Parcourir tous les utilisateurs en parallèle
         allUsers.parallelStream().forEach(user -> {
-            // Ne pas comparer l'utilisateur avec lui-même
             if (!user.getId().equals(userId)) {
                 // Récupérer l'historique de l'autre utilisateur
                 History otherUserHistory = historyService.getHistoryByUserId(user.getId());
@@ -154,15 +184,17 @@ public class SerieService {
         double viewScore = series.getViews();
         double likeScore = series.getLikes();
         double dislikeScore = series.getDislikes();
-
-        // Vous pouvez ajuster ces poids en fonction de l'importance que vous accordez aux vues, aux likes et aux dislikes
         double viewWeight = 0.05;
         double likeWeight = 0.1;
         double dislikeWeight = -0.08;
-
+        // les poids sont léger pour éviter de fausser les résultats
         return viewScore * viewWeight + likeScore * likeWeight + dislikeScore * dislikeWeight;
     }
-
+    /**
+     * Incrémente le nombre de likes d'une série.
+     * @param serieId   l'ID de la série
+     * @return          la série mise à jour
+     */
     public void incrementLikeCount(String serieId) {
         Series serie = getSerieById(serieId);
         if (serie != null) {
@@ -170,7 +202,11 @@ public class SerieService {
             serieRepository.save(serie);
         }
     }
-
+    /**
+     * Incrémente le nombre de dislikes d'une série.
+     * @param serieId   l'ID de la série
+     * @return          la série mise à jour
+     */
     public void incrementDislikeCount(String serieId) {
         Series serie = getSerieById(serieId);
         if (serie != null) {
@@ -178,6 +214,11 @@ public class SerieService {
             serieRepository.save(serie);
         }
     }
+    /**
+     * Incrémente le nombre de vues d'une série.
+     * @param serieId   l'ID de la série
+     * @return          la série mise à jour
+     */
     public void incrementViewCount(String serieId) {
         Series serie = getSerieById(serieId);
         if (serie != null) {
@@ -185,6 +226,11 @@ public class SerieService {
             serieRepository.save(serie);
         }
     }
+    /**
+     * Calcule les similarités entre les séries.
+     * Cette méthode calcule les similarités entre les séries et les stocke dans la base de données.
+     * Fonction utilisé pour calculer les similarités entre les séries.
+     */
     public double cosineSimilarity(Map<String, Double> vectorA, Map<String, Double> vectorB) {
         double dotProduct = 0.0;
         double normA = 0.0;
@@ -198,6 +244,12 @@ public class SerieService {
         }
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
+    /**
+     * Calcule les similarités entre les séries.
+     * Cette méthode calcule les similarités entre les séries et les stocke dans la base de données.
+     * Fonction utilisé dans le projet.
+     * Elle récupère les vecteurs TF-IDF de chaque série et calcule la similarité cosinus entre chaque paire de séries.
+     */
     public void calculateSeriesSimilarities() {
         if (seriesSimilarityRepository.count() > 0) {
             return;
@@ -217,7 +269,13 @@ public class SerieService {
             });
         });
     }
-
+    /**
+     * Enregistre la similarité entre deux séries dans la base de données.
+     * @param series1       la première série
+     * @param series2       la deuxième série
+     * @param similarity    la similarité entre les deux séries
+     * @return              la similarité enregistrée
+     */
     public void saveSimilarityToDatabase(Series series1, Series series2, double similarity) {
         SeriesSimilarity seriesSimilarity = new SeriesSimilarity();
         seriesSimilarity.setSeries1Id(series1.getId());
@@ -247,17 +305,26 @@ public class SerieService {
 
         return similarSeries;
     }
+    /**
+     * Recommande des séries à un utilisateur.
+     * Cette méthode recommande des séries à un utilisateur en fonction de son historique de recherche.
+     * Elle utilise le filtrage collaboratif et le filtrage basé sur le contenu pour recommander des séries.
+     * Malheureusement, cette méthode n'est pas très efficace car elle est très lente.
+     * Pour l'améliorer, on à utilisé des threads pour paralléliser les calculs, mis en cache les resultats et limité le nombre de séries similaires à traiter.
+     * @param userId    l'ID de l'utilisateur
+     * @return          la liste des séries recommandées
+     */
     public List<Map<Series, String>> recommendSeries(String userId) {
         // Récupérer les séries que l'utilisateur a visionnées
         List<String> watchedSeries = historyService.getWatchedSeries(userId);
 
         // Si l'utilisateur est nouveau ou peu actif, recommander les séries les plus populaires
-        if (watchedSeries.size() < 2) {
+        if (watchedSeries.size() < 2) { // 2 série pour avoir un minimum de données
             return getPopularSeries().stream().limit(10).map(series -> {
                 Map<Series, String> map = new HashMap<>();
                 map.put(series, "Cette série est très populaire.");
                 return map;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toList()); // on retourne les 10 premières séries les plus populaires via le calcul du score de recommandation
         }
 
         // Limiter le nombre de séries visionnées à prendre en compte
@@ -281,7 +348,7 @@ public class SerieService {
                     Series similarSeries = getSerieById(similarSeriesId);
                     double score = recommendedSeriesScore.getOrDefault(similarSeries, 0.0);
 
-                    // Calculer le score de recommandation basé sur la position dans la liste, le nombre de likes, de vues et de dislikes
+                    // Calculer le score de recommandation par apport à la position dans la liste, le nombre de likes, de vues et de dislikes
                     score += (finalSimilarSeriesIds.size() - finalSimilarSeriesIds.indexOf(similarSeriesId)) + similarSeries.getLikes() * 0.5 + similarSeries.getViews() * 0.5 - similarSeries.getDislikes() * 0.5;
 
                     // Réduire le score des séries très populaires pour augmenter la diversité
@@ -295,7 +362,7 @@ public class SerieService {
             }
         }
 
-        executorService.shutdown();
+        executorService.shutdown(); // Arrêter le pool de threads
         try {
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
@@ -312,7 +379,7 @@ public class SerieService {
             recommendedSeriesExplanations.put(series, "Populaire chez les utilisateurs.");
         }
 
-        // Filtrage collaboratif
+        // Filtrage collaboratif, recommander des séries aimées par des utilisateurs qui aiment les mêmes séries que l'utilisateur actuel
         List<User> allUsers = (List<User>) userService.getAllUsers();
         for (User user : allUsers) {
             if (!user.getId().equals(userId)) {
@@ -336,19 +403,18 @@ public class SerieService {
             }
         }
 
-        // Trier les séries recommandées par score de recommandation
+        // Tri des séries recommandées par score de recommandation
         List<Series> recommendedSeries = recommendedSeriesScore.entrySet().stream()
                 .sorted((e1, e2) -> {
-                    // Ajouter un petit nombre aléatoire au score de chaque série
+                    // Ajouter un petit nombre aléatoire au score de chaque série pour éviter les séries avec le même score
                     double score1 = e1.getValue() + Math.random() * 0.1;
                     double score2 = e2.getValue() + Math.random() * 0.1;
                     return Double.compare(score2, score1);
                 })
                 .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()); // On retourne la liste
 
         // Mélanger les séries recommandées
-        Collections.shuffle(recommendedSeries);
 
         Collections.shuffle(recommendedSeries);
         // Créer une liste de maps pour stocker les séries recommandées et leurs explications
@@ -361,13 +427,16 @@ public class SerieService {
 
         return finalRecommendations;
     }
+    /**
+     * Calcule le score de recommandation d'une série.
+     * @param series    la série
+     * @return          le score de recommandation
+     */
     private double getRecommendationScore(Series series, List<String> userLikes) {
-        // Prendre en compte le nombre de vues, les likes et les dislikes
         double viewScore = series.getViews();
         double likeScore = userLikes.contains(series.getId()) ? 1.0 : 0.0;
         double dislikeScore = series.getDislikes();
 
-        // Vous pouvez ajuster ces poids en fonction de l'importance que vous accordez aux vues, aux likes et aux dislikes
         double viewWeight = 0.5;
         double likeWeight = 1.0;
         double dislikeWeight = -0.5;
@@ -393,21 +462,16 @@ public class SerieService {
         }
     }
     public List<String> cacheSimilarSeries(String seriesId){
-        // Si le cache pour la série existe déjà, retournez les ID des séries similaires à partir du cache
         if (seriesCache.containsKey(seriesId)) {
             return seriesCache.get(seriesId);
         }
 
-        // Si le cache n'existe pas, calculez les séries similaires et remplissez le cache
         List<Series> similarSeries = getSimilarSeries(seriesId);
 
-        // Convertir la liste des séries similaires en une liste d'ID de séries
         List<String> similarSeriesIds = similarSeries.stream().map(Series::getId).collect(Collectors.toList());
 
-        // Enregistrez les ID des séries similaires dans le cache en mémoire
         seriesCache.put(seriesId, similarSeriesIds);
 
-        // Enregistrez les ID des séries similaires dans le cache dans la base de données
         Series series = getSerieById(seriesId);
         series.getSimilarSeriesCache().put(seriesId, similarSeriesIds);
         serieRepository.save(series);
@@ -416,7 +480,7 @@ public class SerieService {
     }
 
 
-    public class Pair<F, S> { // paire pour stocker les séries et leur similarité
+    public class Pair<F, S> { // Pratique pour le calcul des similarités
         private F first;
         private S second;
 

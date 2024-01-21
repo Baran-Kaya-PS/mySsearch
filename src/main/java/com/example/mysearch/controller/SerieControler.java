@@ -15,11 +15,17 @@ import org.springframework.ui.Model;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
 
 import java.security.Principal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
+/**
+ * Contrôleur pour les séries.
+ */
 @Controller // Remplacer @RestController par @Controller car on retourne une vue HTML et non du JSON
 @RequestMapping("/api/serie")
 public class SerieControler {
@@ -29,28 +35,66 @@ public class SerieControler {
     private final HistoryService historyService;
     private static final Logger logger = LoggerFactory.getLogger(SerieControler.class);
 
+    /**
+     * Constructeur du contrôleur des séries.
+     * @param serieService Le service des séries.
+     * @param userService Le service des utilisateurs.
+     * @param tfidfCalculator Le calculateur TF-IDF.
+     * @param historyService Le service de l'historique.
+     */
     public SerieControler(SerieService serieService, UserService userService, TFIDFCalculator tfidfCalculator, HistoryService historyService) {
         this.serieService = serieService;
         this.userService = userService;
         this.tfidfCalculator = tfidfCalculator;
         this.historyService = historyService;
     }
+
+    /**
+     * Récupère toutes les séries.
+     * @return Les séries.
+     */
     public ResponseEntity<Iterable<Series>> getAllSeries() {
         Iterable<Series> series = serieService.getAllSeries();
         return ResponseEntity.ok(series);
     }
+
+    /**
+     * Récupère une série par son identifiant.
+     * @param serieId L'identifiant de la série.
+     * @return La série correspondante.
+     */
     public ResponseEntity<Series> getSerieById(String serieId) {
         Series serie = serieService.getSerieById(serieId);
         return serie != null ? ResponseEntity.ok(serie): ResponseEntity.notFound().build();
     }
+
+    /**
+     * Ajoute une série.
+     * @param serie La série à ajouter.
+     * @return La série ajoutée.
+     */
     public ResponseEntity<Series> addSerie(Series serie) {
         Series savedSerie = serieService.addSerie(serie);
         return ResponseEntity.ok(savedSerie);
     }
+
+    /**
+     * Supprime une série.
+     * @param serieId L'identifiant de la série à supprimer.
+     * @return La réponse de suppression.
+     */
     public ResponseEntity<Series> deleteSerie(String serieId) {
         serieService.deleteSerie(serieId);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Recherche des séries.
+     * @param keyword Le mot-clé de recherche.
+     * @param model Le modèle de la vue.
+     * @param principal Le principal.
+     * @return La vue index.
+     */
     @GetMapping("/search")
     public String search(@RequestParam(required = false) String keyword, Model model, Principal principal) {
         if (keyword != null && !keyword.isEmpty()) {
@@ -74,7 +118,14 @@ public class SerieControler {
         }
         return "index";
     }
-    @GetMapping("/click")
+    /**
+     * Gère le clic sur une série.
+     * @param serieId L'identifiant de la série.
+     * @param principal Le principal.
+     * @param model Le modèle de la vue.
+     * @return La vue de la série.
+     */
+@GetMapping("/click")
     public String handleSerieClick(@RequestParam String serieId, Principal principal,Model model) {
         String username = principal.getName();
         User user = userService.getUserByUsername(username);
@@ -83,9 +134,20 @@ public class SerieControler {
             serieService.incrementViewCount(serieId);
         }
         Series serie = serieService.getSerieById(serieId);
+        List<Series> similarSeries = serieService.getSimilarSeries(serieId).stream()
+                .limit(8)
+                .collect(Collectors.toList());
         model.addAttribute("serie", serie);
+        model.addAttribute("similarSeries", similarSeries);
         return "serie"; // ou toute autre page appropriée
     }
+    /**
+     * Gère le dislike d'une série.
+     * @param serieName Le nom de la série.
+     * @param principal Le principal.
+     * @param model Le modèle de la vue.
+     * @return La vue de la série.
+     */
     @GetMapping("/dislike")
     public String handleDislike(@RequestParam String serieName, Principal principal, Model model) {
         String username = principal.getName();
@@ -100,7 +162,13 @@ public class SerieControler {
         model.addAttribute("serie", serie);
         return "serie";
     }
-
+    /**
+     * Gère le like d'une série.
+     * @param serieName Le nom de la série.^
+     * @param principal Le principal.
+     * @param model Le modèle de la vue.
+     * @return La vue de la série.
+     */
     @GetMapping("/like")
     public String handleLike(@RequestParam String serieName, Principal principal, Model model) {
         String username = principal.getName();
@@ -115,6 +183,12 @@ public class SerieControler {
         model.addAttribute("serie", serie);
         return "serie";
     }
+    /**
+     * Gère la recommandation de séries.
+     * @param principal Le principal.
+     * @param model Le modèle de la vue.
+     * @return La vue de la recommandation.
+     */
     @GetMapping("/recommendations")
     public String getRecommendations(Principal principal, Model model) {
         String username = principal.getName();
@@ -124,6 +198,19 @@ public class SerieControler {
             model.addAttribute("series", recommendedSeries);
         }
         return "recommandation";
+    }
+    /**
+     * retourne la liste des séries.
+     * @param model Le modèle de la vue.
+     * @return La vue des séries.
+     */
+    @GetMapping("/all")
+    public String getAllSeries(Model model) {
+        List<Series> series = StreamSupport.stream(serieService.getAllSeries().spliterator(), false)
+                .sorted(Comparator.comparingInt(s -> ((Series) s).getLikes() + ((Series) s).getViews()/10 - ((Series) s).getDislikes()).reversed())
+                .collect(Collectors.toList());
+        model.addAttribute("series", series);
+        return "series";
     }
 
 }

@@ -8,6 +8,10 @@ import org.springframework.data.mongodb.core.query.Update;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+/**
+ * Implémentation de l'interface UserRepositoryCustom.
+ * Cette classe permet d'ajouter une recherche à l'historique d'un utilisateur.
+ */
 public class UserRepositoryImpl implements UserRepositoryCustom {
 
     @Autowired

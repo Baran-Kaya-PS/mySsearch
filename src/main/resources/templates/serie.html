@@ -41,6 +41,12 @@
         .serie-info img {
             max-width: 200px;
         }
+        .series-item img{
+            width: 150px;
+            height: auto;
+            margin: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -57,6 +63,9 @@
             <li class="nav-item">
                 <a class="nav-link" href="/api/serie/recommendations">Recommandations</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/api/history/user">Historique</a>
+            </li>
         </ul>
     </div>
 </nav>
@@ -69,6 +78,7 @@
     <div class="video-container mt-5">
         <iframe th:src="@{/video/video.mp4}" frameborder="0" allowfullscreen></iframe>
     </div>
+
     <div class="text-center mt-3">
         <h4>Numéro de la série:</h4>
         <select id="serie-number" class="form-control">
@@ -93,6 +103,18 @@
             <option value="9">9</option>
             <option value="10">10</option>
         </select>
+    </div>
+    <div class="container">
+        <h2 class="text-center mt-5">Similar Series</h2>
+        <div class="row text-center mt-4">
+            <div th:each="series : ${similarSeries}">
+                <div class="series-item">
+                    <a th:href="@{'/api/serie/click?serieId=' + ${series.id}}">
+                        <img th:src="@{'/image/' + ${series.titre} + '.jpg'}" alt="Series Image" class="img-fluid mt-3">
+                    <h5 th:text="${series.titre}"></h5>
+                </div>
+            </div>
+        </div>
     </div>
     <div>
         <form method="get">

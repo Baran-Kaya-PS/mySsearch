@@ -10,6 +10,9 @@ import lombok.Data;
 import java.util.*;
 
 
+/**
+ * Représente l'historique d'un utilisateur dans l'application de recherche.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,6 +28,12 @@ public class History {
     private String serieId;
     private List<String> serieDislike = new ArrayList<>();
     private List<String> serieLike = new ArrayList<>();
+
+    /**
+     * Constructeur de la classe History.
+     * 
+     * @param utilisateurId l'identifiant de l'utilisateur
+     */
     public History(String utilisateurId) {
         this.utilisateurId = utilisateurId;
     }

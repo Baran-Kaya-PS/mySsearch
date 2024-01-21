@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recommandations</title>
+    <title>Historique</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body, html {
@@ -13,19 +13,6 @@
         .container {
             max-width: 1000px;
             padding-top: 40px;
-        }
-        .series-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .series-item {
-            text-align: center;
-        }
-        .series-item img {
-            width: 100%;
-            height: auto;
-            border-radius: 5px;
         }
         .main-content {
             min-height: 100%;
@@ -41,6 +28,19 @@
             padding-top: 20px;
             padding-bottom: 20px;
         }
+        .series-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .series-item {
+            text-align: center;
+        }
+        .series-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -52,48 +52,50 @@
                 <a class="nav-link" href="/api/home">Accueil</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="/api/series">Séries</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/api/serie/recommendations">Recommandations</a>
+            </li>
+            <li class="nav-item active">
                 <a class="nav-link" href="/api/history/user">Historique</a>
-            </li>
-        </ul>
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <a class="nav-link" th:text="${#authentication.name}">NomUtilisateur</a>
-            </li>
-            <li class="nav-item">
-                <form th:action="@{/logout}" method="post">
-                    <button type="submit" class="btn btn-outline-danger">Déconnexion</button>
-                </form>
             </li>
         </ul>
     </div>
 </nav>
 
 <div class="container">
-    <h2 class="text-center mt-5">Séries Recommandées Pour Vous</h2>
-    <div class="row text-center mt-4">
-        <div th:each="map : ${series}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <div th:each="entry : ${map}">
-                <a th:href="@{/api/serie/click(serieId=${entry.key.id})}">
-                    <img th:src="@{/image/{serieName}.jpg(serieName=${entry.key.titre})}" alt="Image de la série" class="img-fluid" style="width: 200px; height: 300px;">
-                    <p class="mt-2" th:text="${entry.key.titre}">Nom de la série</p>
-                    <p class="mt-2" th:text="${entry.value}">Raison de la recommandation</p>
+    <h1 class="text-center mt-5">Historique</h1>
+    <div th:if="${history != null}">
+        <h2 class="mt-4">Recherches :</h2>
+        <ul>
+            <li th:each="search : ${history.searchCount}">
+                <p th:text="${search.key} + ' : ' + ${search.value}"></p>
+            </li>
+        </ul>
+        <h2 class="mt-4">Clics :</h2>
+        <div class="series-grid">
+            <div th:each="click : ${history.clickCount}" class="series-item">
+                <a th:href="@{'/api/serie/' + ${click.key}}">
+                    <img th:src="@{'/image/' + ${seriesNames[click.key]} + '.jpg'}" alt="Image not found" onerror="this.onerror=null; this.src='/images/default.jpg';"/>
+                    <p th:text="${seriesNames[click.key]} + ' : ' + ${click.value}"></p>
                 </a>
             </div>
         </div>
     </div>
-
+    <div th:if="${history == null}">
+        <p class="alert alert-warning">Aucun historique disponible.</p>
+    </div>
 </div>
 
 <footer class="footer mt-5 py-3 bg-secondary">
     <div class="container">
-        <span class="text-muted">Votre guide de streaming personnalisé</span>
+        <span class="text-muted">© 2023 MySearch</span>
     </div>
 </footer>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-</div>
-
 </body>
 </html>

@@ -13,6 +13,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Cette classe est responsable de la génération de données pour les utilisateurs, les séries et l'historique.
+ * Elle implémente l'interface CommandLineRunner pour pouvoir être exécutée au démarrage de l'application.
+ * Les données générées comprennent des utilisateurs, des vues, des likes, des dislikes et des recherches aléatoires pour les séries.
+ * Les utilisateurs sont générés avec un nom, un email et un mot de passe.
+ * Les vues et les likes sont ajoutés à l'historique de l'utilisateur et le compteur de vues et de likes de la série est incrémenté.
+ * Les dislikes sont également ajoutés à l'historique de l'utilisateur, mais le compteur de dislikes de la série n'est pas incrémenté.
+ * Les mots-clés possibles pour les recherches sont : "action", "drama", "comedy", "thriller", "sci-fi", "romance", "horror", "adventure", "mystery" et "fantasy".
+ * Les utilisateurs, l'historique généré et les données des séries sont affichés dans la console.
+ */
 @Component
 @Order(2)
 public class DataGeneratorRunner implements CommandLineRunner {
